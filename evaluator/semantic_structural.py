@@ -1,11 +1,3 @@
-"""Pillar 2: Semantic-Structural Metrics.
-
-Six metrics that capture semantic relationships and textual organisation
-using TF-IDF (scikit-learn) and spaCy.  No transformer models.
-
-Each public function returns ``(score: float, findings: list[str])``.
-"""
-
 import math
 from typing import Tuple, List
 
@@ -23,24 +15,12 @@ from evaluator.utils import (
 )
 
 
-# ===================================================================
-# 1. Coherence Score (TF-IDF cosine similarity)
-# ===================================================================
-
 def coherence_score(text: str) -> Tuple[float, List[str]]:
-    """Measure semantic coherence via consecutive-sentence TF-IDF similarity.
-
-    Splits the prompt into sentences, builds TF-IDF vectors, then
-    averages the cosine similarity between each consecutive pair.
-
-    Range: 0-1.  Higher = more coherent flow between sentences.
-    Single-sentence prompts return 0.5 (neutral).
-    """
     sentences = split_sentences(text)
     findings: List[str] = []
 
     if len(sentences) <= 1:
-        findings.append("Single sentence — coherence is neutral.")
+        findings.append("Single sentence -- coherence is neutral.")
         return 0.5, findings
 
     try:
@@ -56,7 +36,7 @@ def coherence_score(text: str) -> Tuple[float, List[str]]:
         sims.append(float(sim))
 
     avg_sim = float(np.mean(sims)) if sims else 0.0
-    score = clamp(avg_sim * 1.5)  # scale up; raw cosine is usually < 0.7
+    score = clamp(avg_sim * 1.5)
 
     if avg_sim > 0.4:
         findings.append(f"Good sentence-to-sentence coherence (avg similarity {avg_sim:.2f}).")
@@ -68,18 +48,7 @@ def coherence_score(text: str) -> Tuple[float, List[str]]:
     return score, findings
 
 
-# ===================================================================
-# 2. Semantic Density
-# ===================================================================
-
 def semantic_density(text: str) -> Tuple[float, List[str]]:
-    """Ratio of unique meaningful lemmas to total tokens.
-
-    Meaningful POS: nouns, verbs, adjectives, adverbs.
-    High ratio = dense, information-rich.  Low ratio = filler-heavy.
-
-    Range: 0-1.
-    """
     nlp = get_nlp()
     doc = nlp(text)
     findings: List[str] = []
@@ -95,7 +64,7 @@ def semantic_density(text: str) -> Tuple[float, List[str]]:
     }
 
     ratio = len(meaningful_lemmas) / total_tokens
-    score = clamp(ratio * 2.5)  # typical ratio is 0.2-0.5
+    score = clamp(ratio * 2.5)
 
     if ratio > 0.35:
         findings.append(f"High semantic density ({ratio:.2f}). Information-rich text.")
@@ -107,24 +76,12 @@ def semantic_density(text: str) -> Tuple[float, List[str]]:
     return score, findings
 
 
-# ===================================================================
-# 3. Topic Focus (TF-IDF centroid distance)
-# ===================================================================
-
 def topic_focus(text: str) -> Tuple[float, List[str]]:
-    """Measure how focused the prompt is on a single topic.
-
-    Builds TF-IDF vectors for all sentences, computes a centroid, then
-    measures average cosine distance from the centroid.  Low distance =
-    focused.  High distance = scattered.
-
-    Range: 0-1.  1 = perfectly focused.
-    """
     sentences = split_sentences(text)
     findings: List[str] = []
 
     if len(sentences) <= 1:
-        findings.append("Single sentence — topic focus is maximal by default.")
+        findings.append("Single sentence -- topic focus is maximal by default.")
         return 0.9, findings
 
     try:
@@ -155,23 +112,11 @@ def topic_focus(text: str) -> Tuple[float, List[str]]:
     return score, findings
 
 
-# ===================================================================
-# 4. Lexical Sophistication
-# ===================================================================
-
 def lexical_sophistication(text: str) -> Tuple[float, List[str]]:
-    """Score vocabulary sophistication via word frequency rank.
-
-    Uses NLTK Brown corpus frequencies.  Prompts using more precise,
-    less common words score higher.
-
-    Range: 0-1.  Everyday language ~0.4, technical ~0.8-1.0.
-    """
     nlp = get_nlp()
     doc = nlp(text)
     findings: List[str] = []
 
-    # Get frequency distribution from Brown corpus
     try:
         from nltk.corpus import brown
         brown.words()
@@ -188,20 +133,17 @@ def lexical_sophistication(text: str) -> Tuple[float, List[str]]:
     if not words:
         return 0.3, ["No substantive words found."]
 
-    # For each word, compute a rarity score
     rarity_scores = []
     for w in words:
         freq = freq_dist.get(w, 0)
         if freq == 0:
-            rarity_scores.append(1.0)  # unknown = rare/technical
+            rarity_scores.append(1.0)
         else:
-            # Normalise: common words get low rarity
             norm_freq = freq / total_words_in_corpus
             rarity = 1.0 - min(norm_freq * 5000, 1.0)
             rarity_scores.append(max(rarity, 0.0))
 
     avg_rarity = float(np.mean(rarity_scores))
-    # Scale: 0.3 baseline, up to 1.0
     score = clamp(0.3 + avg_rarity * 0.7)
 
     if avg_rarity > 0.7:
@@ -214,23 +156,12 @@ def lexical_sophistication(text: str) -> Tuple[float, List[str]]:
     return score, findings
 
 
-# ===================================================================
-# 5. Sentence Flow
-# ===================================================================
-
 def sentence_flow(text: str) -> Tuple[float, List[str]]:
-    """Score sentence length variance for natural flow.
-
-    Very uniform lengths suggest mechanical writing.  Very high variance
-    suggests disorganised writing.  Moderate variance is ideal.
-
-    Range: 0-1.
-    """
     sentences = split_sentences(text)
     findings: List[str] = []
 
     if len(sentences) <= 1:
-        findings.append("Single sentence — flow analysis not applicable.")
+        findings.append("Single sentence -- flow analysis not applicable.")
         return 0.5, findings
 
     lengths = [word_count(s) for s in sentences]
@@ -240,9 +171,8 @@ def sentence_flow(text: str) -> Tuple[float, List[str]]:
     if mean_len == 0:
         return 0.3, ["Sentences are empty."]
 
-    cv = std_len / mean_len  # coefficient of variation
+    cv = std_len / mean_len
 
-    # Ideal CV is around 0.3-0.6
     from evaluator.utils import gaussian_score
     score = gaussian_score(cv, mean=0.45, std=0.3)
 
@@ -258,18 +188,7 @@ def sentence_flow(text: str) -> Tuple[float, List[str]]:
     return clamp(score), findings
 
 
-# ===================================================================
-# 6. Reference Resolution
-# ===================================================================
-
 def reference_resolution(text: str) -> Tuple[float, List[str]]:
-    """Score pronoun-antecedent clarity.
-
-    Counts pronouns without clear antecedents using spaCy dependency
-    parsing.  Ambiguous references reduce the score.
-
-    Range: 0-1.  1 = all references are clear.
-    """
     nlp = get_nlp()
     doc = nlp(text)
     findings: List[str] = []
@@ -288,7 +207,6 @@ def reference_resolution(text: str) -> Tuple[float, List[str]]:
             if token.text.lower() in ambiguous_pronouns and token.dep_ in ("nsubj", "dobj", "nsubjpass", "pobj"):
                 total_pronouns += 1
 
-                # Check if there is a noun in this or the previous sentence
                 has_antecedent = False
                 search_range = list(sent)
                 if i > 0:
@@ -319,12 +237,7 @@ def reference_resolution(text: str) -> Tuple[float, List[str]]:
     return score, findings
 
 
-# ===================================================================
-# Aggregate helper
-# ===================================================================
-
 def compute_all(text: str) -> dict:
-    """Run all Pillar-2 metrics and return a dict of results."""
     metrics = {
         "coherence": coherence_score,
         "semantic_density": semantic_density,

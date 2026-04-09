@@ -1,14 +1,3 @@
-"""Pillar 3: Information-Theoretic Metrics.
-
-Six metrics rooted in information theory — entropy, redundancy,
-density, vocabulary richness, n-gram repetition, and burstiness.
-
-Uses ``tiktoken`` (cl100k_base) for tokenisation and numpy/scipy
-for computation.  No transformer models.
-
-Each public function returns ``(score: float, findings: list[str])``.
-"""
-
 import math
 from typing import Tuple, List
 from collections import Counter
@@ -19,15 +8,10 @@ import tiktoken
 from evaluator.utils import clamp
 
 
-# ---------------------------------------------------------------------------
-# Tokeniser singleton
-# ---------------------------------------------------------------------------
-
 _encoding = None
 
 
 def _get_encoding():
-    """Return a cached tiktoken cl100k_base encoding."""
     global _encoding
     if _encoding is None:
         _encoding = tiktoken.get_encoding("cl100k_base")
@@ -35,22 +19,10 @@ def _get_encoding():
 
 
 def _tokenise(text: str) -> List[int]:
-    """Tokenise *text* into a list of integer token IDs."""
     return _get_encoding().encode(text)
 
 
-# ===================================================================
-# 1. Shannon Entropy
-# ===================================================================
-
 def shannon_entropy(text: str) -> Tuple[float, List[str]]:
-    """Compute normalised Shannon entropy of the token distribution.
-
-    H = -sum(p(x) * log2(p(x)))  normalised by log2(vocab_size).
-    Higher entropy = more diverse token usage.
-
-    Range: 0-1.
-    """
     tokens = _tokenise(text)
     findings: List[str] = []
 
@@ -80,19 +52,7 @@ def shannon_entropy(text: str) -> Tuple[float, List[str]]:
     return score, findings
 
 
-# ===================================================================
-# 2. Redundancy Score
-# ===================================================================
-
 def redundancy_score(text: str) -> Tuple[float, List[str]]:
-    """Score based on token-level redundancy.
-
-    redundancy = 1 - (unique_tokens / total_tokens).
-    Returns ``1 - redundancy`` so low repetition scores high.
-    Penalises heavily if redundancy > 0.6.
-
-    Range: 0-1.
-    """
     tokens = _tokenise(text)
     findings: List[str] = []
 
@@ -105,7 +65,7 @@ def redundancy_score(text: str) -> Tuple[float, List[str]]:
 
     score = 1.0 - redundancy
     if redundancy > 0.6:
-        score *= 0.5  # heavy penalty
+        score *= 0.5
 
     score = clamp(score)
 
@@ -119,15 +79,7 @@ def redundancy_score(text: str) -> Tuple[float, List[str]]:
     return score, findings
 
 
-# ===================================================================
-# 3. Information Density
-# ===================================================================
-
 def information_density(text: str) -> Tuple[float, List[str]]:
-    """Entropy per token — how much information each token carries.
-
-    Range: 0-1 (normalised).
-    """
     tokens = _tokenise(text)
     findings: List[str] = []
 
@@ -142,7 +94,6 @@ def information_density(text: str) -> Tuple[float, List[str]]:
     )
 
     density = entropy / total if total > 0 else 0.0
-    # Typical values are 0.01-0.15; normalise
     score = clamp(density * 10.0)
 
     if density > 0.08:
@@ -155,20 +106,7 @@ def information_density(text: str) -> Tuple[float, List[str]]:
     return score, findings
 
 
-# ===================================================================
-# 4. Vocabulary Richness (TTR variants)
-# ===================================================================
-
 def vocabulary_richness(text: str) -> Tuple[float, List[str]]:
-    """Compute three Type-Token Ratio variants and average them.
-
-    - Basic TTR: unique / total
-    - Root TTR: unique / sqrt(total)
-    - Log TTR: log(unique) / log(total)
-
-    Averaging handles length sensitivity of basic TTR.
-    Range: 0-1.
-    """
     tokens = _tokenise(text)
     findings: List[str] = []
 
@@ -182,7 +120,6 @@ def vocabulary_richness(text: str) -> Tuple[float, List[str]]:
     root_ttr = unique / math.sqrt(total)
     log_ttr = math.log(unique) / math.log(total) if total > 1 else 0.0
 
-    # Normalise root_ttr (typically 3-20) and log_ttr (typically 0.7-1.0)
     norm_root = clamp(root_ttr / 15.0)
     norm_log = clamp(log_ttr)
 
@@ -190,7 +127,7 @@ def vocabulary_richness(text: str) -> Tuple[float, List[str]]:
     score = clamp(avg)
 
     findings.append(
-        f"TTR variants — basic: {basic_ttr:.2f}, root: {root_ttr:.1f}, log: {log_ttr:.2f}"
+        f"TTR variants -- basic: {basic_ttr:.2f}, root: {root_ttr:.1f}, log: {log_ttr:.2f}"
     )
 
     if score > 0.6:
@@ -203,16 +140,7 @@ def vocabulary_richness(text: str) -> Tuple[float, List[str]]:
     return score, findings
 
 
-# ===================================================================
-# 5. N-gram Repetition Penalty
-# ===================================================================
-
 def ngram_repetition_penalty(text: str) -> Tuple[float, List[str]]:
-    """Penalise repeated bigrams and trigrams.
-
-    Score = 1 - (repeated_ngrams / total_ngrams).
-    Range: 0-1.  1 = no repeated n-grams.
-    """
     tokens = _tokenise(text)
     findings: List[str] = []
 
@@ -235,7 +163,7 @@ def ngram_repetition_penalty(text: str) -> Tuple[float, List[str]]:
         return 0.8, ["No n-grams to analyse."]
 
     ratio = total_repeats / total_ngrams
-    score = clamp(1.0 - ratio * 3.0)  # amplify penalty
+    score = clamp(1.0 - ratio * 3.0)
 
     if ratio < 0.05:
         findings.append("Minimal n-gram repetition.")
@@ -247,25 +175,13 @@ def ngram_repetition_penalty(text: str) -> Tuple[float, List[str]]:
     return score, findings
 
 
-# ===================================================================
-# 6. Burstiness
-# ===================================================================
-
 def burstiness(text: str) -> Tuple[float, List[str]]:
-    """Measure uniformity of information flow across chunks.
-
-    Splits tokens into chunks, computes per-chunk entropy, then
-    measures variance.  Low variance = consistent flow (scores high).
-
-    Range: 0-1.
-    """
     tokens = _tokenise(text)
     findings: List[str] = []
 
     if len(tokens) < 10:
         return 0.5, ["Text too short for burstiness analysis."]
 
-    # Split into ~5 chunks
     chunk_size = max(len(tokens) // 5, 3)
     chunks = [tokens[i:i + chunk_size] for i in range(0, len(tokens), chunk_size)]
     chunks = [c for c in chunks if len(c) >= 3]
@@ -283,7 +199,6 @@ def burstiness(text: str) -> Tuple[float, List[str]]:
     entropies = [chunk_entropy(c) for c in chunks]
     variance = float(np.var(entropies))
 
-    # Low variance = consistent = good; normalise
     score = clamp(1.0 - variance * 2.0)
 
     if variance < 0.2:
@@ -296,12 +211,7 @@ def burstiness(text: str) -> Tuple[float, List[str]]:
     return score, findings
 
 
-# ===================================================================
-# Aggregate helper
-# ===================================================================
-
 def compute_all(text: str) -> dict:
-    """Run all Pillar-3 metrics and return a dict of results."""
     metrics = {
         "shannon_entropy": shannon_entropy,
         "redundancy": redundancy_score,

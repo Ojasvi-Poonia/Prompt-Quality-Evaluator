@@ -1,13 +1,3 @@
-"""Test suite for the Prompt Quality Evaluator.
-
-Tests cover:
-1. Monotonicity — average scores per tier are strictly increasing.
-2. Boundary tests — empty, single-word, and good-prompt templates.
-3. Individual metric tests — each function in isolation.
-4. Determinism — same prompt produces identical scores across runs.
-5. Edge cases — non-English, all-caps, code-only, URL-only, long prompts.
-"""
-
 import json
 import os
 
@@ -17,23 +7,17 @@ from evaluator.scorer import evaluate
 from evaluator import rule_based, semantic_structural, info_theoretic, graph_analysis
 
 
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
 SAMPLE_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "sample_prompts.json")
 
 
 @pytest.fixture(scope="module")
 def sample_prompts():
-    """Load sample prompts from the data file."""
     with open(SAMPLE_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 @pytest.fixture(scope="module")
 def tier_scores(sample_prompts):
-    """Evaluate all sample prompts and group scores by tier."""
     tiers = {}
     for entry in sample_prompts:
         tier = entry["tier"]
@@ -42,7 +26,6 @@ def tier_scores(sample_prompts):
     return {tier: sum(scores) / len(scores) for tier, scores in tiers.items()}
 
 
-# Good prompt for reuse in tests
 GOOD_PROMPT = (
     "Write a Python function called `calculate_statistics` that takes a list of numbers "
     "and returns a dictionary with the mean, median, standard deviation, and mode.\n\n"
@@ -56,12 +39,7 @@ GOOD_PROMPT = (
 )
 
 
-# ===================================================================
-# 1. Monotonicity Test
-# ===================================================================
-
 class TestMonotonicity:
-    """Average scores per tier should be strictly increasing."""
 
     def test_tier_ordering(self, tier_scores):
         tier_order = ["terrible", "poor", "average", "good", "excellent"]
@@ -76,12 +54,7 @@ class TestMonotonicity:
             )
 
 
-# ===================================================================
-# 2. Boundary Tests
-# ===================================================================
-
 class TestBoundaries:
-    """Boundary conditions for extreme inputs."""
 
     def test_empty_string(self):
         result = evaluate("")
@@ -96,12 +69,7 @@ class TestBoundaries:
         assert result["final_score"] > 55, f"Good prompt scored only {result['final_score']}"
 
 
-# ===================================================================
-# 3. Individual Metric Tests
-# ===================================================================
-
 class TestRuleBasedMetrics:
-    """Test each Pillar-1 metric in isolation."""
 
     def test_length_short(self):
         score, findings = rule_based.length_score("hi")
@@ -148,7 +116,6 @@ class TestRuleBasedMetrics:
 
 
 class TestSemanticMetrics:
-    """Test each Pillar-2 metric in isolation."""
 
     def test_coherence_single_sentence(self):
         score, _ = semantic_structural.coherence_score("Just one sentence here.")
@@ -161,7 +128,7 @@ class TestSemanticMetrics:
             "Python is widely used in data science."
         )
         score, _ = semantic_structural.coherence_score(text)
-        assert score > 0.1  # TF-IDF cosine between short sentences is naturally low
+        assert score > 0.1
 
     def test_semantic_density(self):
         score, _ = semantic_structural.semantic_density(
@@ -185,7 +152,6 @@ class TestSemanticMetrics:
 
 
 class TestInfoTheoreticMetrics:
-    """Test each Pillar-3 metric in isolation."""
 
     def test_shannon_entropy_short(self):
         score, _ = info_theoretic.shannon_entropy("a")
@@ -217,7 +183,6 @@ class TestInfoTheoreticMetrics:
 
 
 class TestGraphAnalysis:
-    """Test discourse graph construction and metrics."""
 
     def test_build_graph(self):
         text = (
@@ -249,12 +214,7 @@ class TestGraphAnalysis:
         assert any("Missing" in f for f in findings)
 
 
-# ===================================================================
-# 4. Determinism Test
-# ===================================================================
-
 class TestDeterminism:
-    """Same prompt must produce identical scores across runs."""
 
     def test_deterministic(self):
         results = [evaluate(GOOD_PROMPT)["final_score"] for _ in range(3)]
@@ -263,12 +223,7 @@ class TestDeterminism:
         )
 
 
-# ===================================================================
-# 5. Edge Case Tests
-# ===================================================================
-
 class TestEdgeCases:
-    """Edge cases: unusual inputs."""
 
     def test_all_caps(self):
         result = evaluate("WRITE A FUNCTION THAT SORTS NUMBERS IN ASCENDING ORDER")

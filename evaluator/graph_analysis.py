@@ -1,12 +1,3 @@
-"""Discourse Graph Analysis.
-
-Builds a directed graph where each sentence is a node classified by its
-discourse function (CONTEXT, TASK, CONSTRAINT, EXAMPLE).  Edges connect
-sentences that share noun chunks or named entities.
-
-Uses spaCy for NLP and NetworkX for graph operations.  No transformers.
-"""
-
 import re
 from typing import Tuple, List, Dict
 
@@ -14,10 +5,6 @@ import networkx as nx
 
 from evaluator.utils import get_nlp, split_sentences, clamp
 
-
-# ===================================================================
-# Node classification heuristics
-# ===================================================================
 
 _CONTEXT_MARKERS = [
     r"\bcurrently\b", r"\bgiven\b", r"\bbackground\b", r"\bsituation\b",
@@ -50,13 +37,8 @@ _EXAMPLE_MARKERS = [
 
 
 def _classify_sentence(sentence: str) -> str:
-    """Classify a sentence's discourse function.
-
-    Returns one of: CONTEXT, TASK, CONSTRAINT, EXAMPLE, or OTHER.
-    """
     text = sentence.lower()
 
-    # Priority order: EXAMPLE > CONSTRAINT > TASK > CONTEXT
     if any(re.search(p, text) for p in _EXAMPLE_MARKERS):
         return "EXAMPLE"
     if any(re.search(p, text) for p in _CONSTRAINT_MARKERS):
@@ -69,16 +51,7 @@ def _classify_sentence(sentence: str) -> str:
     return "OTHER"
 
 
-# ===================================================================
-# Graph construction
-# ===================================================================
-
 def build_discourse_graph(text: str) -> Tuple[nx.DiGraph, List[Dict]]:
-    """Build a discourse graph from *text*.
-
-    Returns ``(graph, node_data)`` where each entry in *node_data* is
-    ``{"id": int, "text": str, "type": str, "noun_chunks": set, "entities": set}``.
-    """
     nlp = get_nlp()
     sentences = split_sentences(text)
 
@@ -100,13 +73,10 @@ def build_discourse_graph(text: str) -> Tuple[nx.DiGraph, List[Dict]]:
             "entities": entities,
         })
 
-    # Add edges: consecutive + shared nouns/entities
     for i in range(len(node_data)):
-        # Consecutive edge
         if i + 1 < len(node_data):
             G.add_edge(i, i + 1, weight=1)
 
-        # Shared noun/entity edges
         for j in range(i + 2, len(node_data)):
             shared = (
                 node_data[i]["noun_chunks"] & node_data[j]["noun_chunks"]
@@ -118,17 +88,7 @@ def build_discourse_graph(text: str) -> Tuple[nx.DiGraph, List[Dict]]:
     return G, node_data
 
 
-# ===================================================================
-# Graph metrics
-# ===================================================================
-
 def completeness_score(node_data: List[Dict]) -> Tuple[float, List[str]]:
-    """Score presence of discourse node types.
-
-    0.33 per present type (CONTEXT, TASK, CONSTRAINT).
-    Bonus 0.1 for EXAMPLE nodes.
-    Range: 0-1.
-    """
     types_present = {nd["type"] for nd in node_data}
     findings: List[str] = []
 
@@ -151,10 +111,6 @@ def completeness_score(node_data: List[Dict]) -> Tuple[float, List[str]]:
 
 
 def connectivity_score(G: nx.DiGraph) -> Tuple[float, List[str]]:
-    """Score graph density and connectedness.
-
-    Range: 0-1.  Disconnected components penalised.
-    """
     findings: List[str] = []
 
     if G.number_of_nodes() <= 1:
@@ -164,7 +120,6 @@ def connectivity_score(G: nx.DiGraph) -> Tuple[float, List[str]]:
     undirected = G.to_undirected()
     n_components = nx.number_connected_components(undirected)
 
-    # Score = density * connectivity_factor
     connectivity_factor = 1.0 / n_components
     score = clamp(density * 2 * connectivity_factor)
 
@@ -177,11 +132,6 @@ def connectivity_score(G: nx.DiGraph) -> Tuple[float, List[str]]:
 
 
 def information_flow_score(node_data: List[Dict]) -> Tuple[float, List[str]]:
-    """Score whether CONTEXT -> TASK -> CONSTRAINT ordering holds.
-
-    Correct ordering scores high; jumbled ordering scores low.
-    Range: 0-1.
-    """
     findings: List[str] = []
 
     type_positions: Dict[str, List[int]] = {}
@@ -225,12 +175,6 @@ def information_flow_score(node_data: List[Dict]) -> Tuple[float, List[str]]:
 
 
 def complexity_score(G: nx.DiGraph) -> Tuple[float, List[str]]:
-    """Score graph complexity via edges/nodes ratio.
-
-    Ideal range 1.5-3.0.  Too simple (<1.0) or convoluted (>4.0)
-    is penalised.
-    Range: 0-1.
-    """
     findings: List[str] = []
     nodes = G.number_of_nodes()
     edges = G.number_of_edges()
@@ -253,16 +197,7 @@ def complexity_score(G: nx.DiGraph) -> Tuple[float, List[str]]:
     return clamp(score), findings
 
 
-# ===================================================================
-# Aggregate helper
-# ===================================================================
-
 def compute_all(text: str) -> dict:
-    """Run all graph metrics and return a dict of results.
-
-    Keys: completeness, connectivity, information_flow, complexity.
-    Also includes ``graph_node_types`` with counts of each type.
-    """
     G, node_data = build_discourse_graph(text)
 
     type_counts: Dict[str, int] = {}

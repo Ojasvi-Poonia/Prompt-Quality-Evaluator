@@ -1,15 +1,4 @@
 #!/usr/bin/env python3
-"""CLI entry point for the Prompt Quality Evaluator.
-
-Usage examples::
-
-    python main.py "Your prompt text here"
-    python main.py --file prompt.txt
-    python main.py "Your prompt" --json
-    python main.py "Your prompt" --verbose
-    python main.py "Your prompt" --no-chart
-    python main.py "Your prompt" --output report/
-"""
 
 import argparse
 import json
@@ -23,7 +12,6 @@ from evaluator.visualizer import generate_radar_chart, print_report
 
 
 def _ensure_nlp_data():
-    """Download required NLTK data and spaCy model if missing."""
     import nltk
 
     for resource, path in [
@@ -57,7 +45,6 @@ def main():
 
     args = parser.parse_args()
 
-    # --- Resolve prompt text ---
     if args.file:
         if not os.path.isfile(args.file):
             print(f"Error: file not found: {args.file}", file=sys.stderr)
@@ -74,10 +61,8 @@ def main():
         print("Error: prompt text is empty.", file=sys.stderr)
         sys.exit(1)
 
-    # --- Ensure NLP resources ---
     _ensure_nlp_data()
 
-    # --- Evaluate ---
     console = Console(stderr=True) if args.json_output else Console()
 
     if not args.json_output:
@@ -85,7 +70,6 @@ def main():
 
     result = evaluate(text)
 
-    # --- Output ---
     if args.json_output:
         print(json.dumps(result, indent=2, default=str))
     else:
@@ -96,7 +80,6 @@ def main():
             for key, val in sorted(result["raw_metrics"].items()):
                 console.print(f"  {key}: {val['score']:.3f}")
 
-    # --- Radar chart ---
     if not args.no_chart:
         chart_path = os.path.join(args.output, "radar_chart.png")
         saved = generate_radar_chart(result["rubric_dimensions"], output_path=chart_path)

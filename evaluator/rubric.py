@@ -1,19 +1,7 @@
-"""Rubric Mapping — maps raw metrics into 8 human-readable dimensions.
-
-Each dimension is a weighted composite of metrics from all three pillars
-plus the graph analysis module.  This provides interpretable quality
-dimensions while keeping the underlying metrics granular.
-"""
-
 from typing import Dict, List
 
 
-# ===================================================================
-# Qualitative labels
-# ===================================================================
-
 def _label_for_score(score: float) -> str:
-    """Return a qualitative label for a 0-1 score."""
     if score >= 0.85:
         return "Excellent"
     if score >= 0.70:
@@ -24,13 +12,6 @@ def _label_for_score(score: float) -> str:
         return "Fair"
     return "Weak"
 
-
-# ===================================================================
-# Dimension definitions
-# ===================================================================
-
-# Each dimension is a list of (metric_key, weight) tuples.
-# metric_key follows the pattern "pillar.metric_name".
 
 DIMENSIONS = {
     "Clarity": [
@@ -52,7 +33,7 @@ DIMENSIONS = {
     ],
     "Task Definition": [
         ("rule_based.task_signal", 0.5),
-        ("graph.completeness", 0.3),  # reuses completeness (task node presence)
+        ("graph.completeness", 0.3),
         ("rule_based.constraint", 0.2),
     ],
     "Context Completeness": [
@@ -79,18 +60,7 @@ DIMENSIONS = {
 }
 
 
-# ===================================================================
-# Flat metric key resolver
-# ===================================================================
-
 def _resolve_metric(key: str, flat_metrics: Dict[str, dict]) -> float:
-    """Look up a metric score from the flat_metrics dict.
-
-    *key* is e.g. ``"rule_based.grammar"``.  *flat_metrics* maps such
-    keys to ``{"score": float, "findings": [...]}``.
-
-    Returns 0.0 if the key is missing.
-    """
     entry = flat_metrics.get(key)
     if entry is None:
         return 0.0
@@ -98,7 +68,6 @@ def _resolve_metric(key: str, flat_metrics: Dict[str, dict]) -> float:
 
 
 def _collect_findings(keys: List[str], flat_metrics: Dict[str, dict]) -> List[str]:
-    """Collect findings from a list of metric keys."""
     findings: List[str] = []
     for key in keys:
         entry = flat_metrics.get(key)
@@ -107,25 +76,7 @@ def _collect_findings(keys: List[str], flat_metrics: Dict[str, dict]) -> List[st
     return findings
 
 
-# ===================================================================
-# Public API
-# ===================================================================
-
 def map_to_rubric(flat_metrics: Dict[str, dict]) -> List[dict]:
-    """Map flat metrics into rubric dimensions.
-
-    Parameters
-    ----------
-    flat_metrics : dict
-        Keyed by ``"pillar.metric"`` strings, each value is
-        ``{"score": float, "findings": list[str]}``.
-
-    Returns
-    -------
-    list[dict]
-        One entry per dimension with keys: ``name``, ``score``, ``label``,
-        ``findings``.
-    """
     dimensions = []
 
     for dim_name, components in DIMENSIONS.items():

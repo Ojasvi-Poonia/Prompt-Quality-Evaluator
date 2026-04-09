@@ -1,0 +1,102 @@
+[
+  {
+    "tier": "terrible",
+    "expected_range": [0, 25],
+    "prompt": "help"
+  },
+  {
+    "tier": "terrible",
+    "expected_range": [0, 25],
+    "prompt": "do thing"
+  },
+  {
+    "tier": "terrible",
+    "expected_range": [0, 25],
+    "prompt": "write code"
+  },
+  {
+    "tier": "terrible",
+    "expected_range": [0, 25],
+    "prompt": "fix it"
+  },
+  {
+    "tier": "poor",
+    "expected_range": [25, 45],
+    "prompt": "Write me a python script that does stuff with data"
+  },
+  {
+    "tier": "poor",
+    "expected_range": [25, 45],
+    "prompt": "Can you make a website for me? I want it to look good and work well."
+  },
+  {
+    "tier": "poor",
+    "expected_range": [25, 45],
+    "prompt": "Explain machine learning in simple terms and give some examples of how it is used."
+  },
+  {
+    "tier": "poor",
+    "expected_range": [25, 45],
+    "prompt": "I need a function that sorts things. Make it fast."
+  },
+  {
+    "tier": "average",
+    "expected_range": [45, 65],
+    "prompt": "Write a Python function that takes a list of numbers and returns the top 3 largest values. Handle edge cases like empty lists and lists with fewer than 3 elements."
+  },
+  {
+    "tier": "average",
+    "expected_range": [45, 65],
+    "prompt": "Create a REST API endpoint in Node.js that accepts a POST request with a JSON body containing a username and password, validates the input, and returns a JWT token. Use Express."
+  },
+  {
+    "tier": "average",
+    "expected_range": [45, 65],
+    "prompt": "Write a SQL query that finds all customers who placed more than 5 orders in the last 30 days. Include their name, email, and total order amount. Use the customers and orders tables."
+  },
+  {
+    "tier": "average",
+    "expected_range": [45, 65],
+    "prompt": "Explain the difference between TCP and UDP protocols. Cover reliability, ordering, speed, and typical use cases for each. Write it for someone with basic networking knowledge."
+  },
+  {
+    "tier": "good",
+    "expected_range": [65, 85],
+    "prompt": "Write a Python function called `merge_sorted_lists` that merges two sorted lists into a single sorted list.\n\nRequirements:\n- Time complexity must be O(n + m) where n and m are the lengths of the input lists\n- Do not use Python's built-in sort()\n- Handle edge cases: empty lists, lists with duplicates, lists of different lengths\n- Add type hints and a docstring\n- Return a new list (do not modify inputs)\n\nExample:\n  merge_sorted_lists([1, 3, 5], [2, 4, 6]) -> [1, 2, 3, 4, 5, 6]"
+  },
+  {
+    "tier": "good",
+    "expected_range": [65, 85],
+    "prompt": "Design a database schema for an e-commerce platform.\n\nContext: We are building a multi-vendor marketplace where sellers list products and buyers place orders.\n\nRequirements:\n- Support multiple sellers, each with their own product catalog\n- Products have categories, prices, inventory counts, and images\n- Orders track status (pending, shipped, delivered, cancelled)\n- Include proper foreign keys and indexes\n\nConstraints:\n- Use PostgreSQL\n- Normalise to 3NF\n- Include created_at and updated_at timestamps on all tables\n\nOutput as SQL CREATE TABLE statements with comments."
+  },
+  {
+    "tier": "good",
+    "expected_range": [65, 85],
+    "prompt": "Write a technical blog post comparing React Server Components vs traditional client-side rendering.\n\nAudience: Intermediate frontend developers familiar with React but new to RSC.\n\nCover:\n- What problem RSC solves\n- How data fetching differs\n- Bundle size implications\n- When to use each approach\n\nFormat:\n- 800-1200 words\n- Include code snippets for key concepts\n- Use a neutral, informative tone\n- End with a practical decision framework"
+  },
+  {
+    "tier": "good",
+    "expected_range": [65, 85],
+    "prompt": "Implement a rate limiter middleware for an Express.js API.\n\nContext: Our API serves 10,000 requests per minute. We need to prevent abuse without blocking legitimate users.\n\nRequirements:\n- Sliding window algorithm\n- 100 requests per minute per IP address\n- Return 429 status with Retry-After header when limit exceeded\n- Store counters in Redis for multi-instance support\n\nDo not use third-party rate limiting libraries. Include unit tests."
+  },
+  {
+    "tier": "excellent",
+    "expected_range": [85, 100],
+    "prompt": "Context:\nI am building a real-time collaborative document editor (similar to Google Docs) using React 18 on the frontend and a Node.js WebSocket server on the backend. The system needs to handle concurrent edits from multiple users on the same document without data loss or conflicts.\n\nTask:\nImplement the Operational Transformation (OT) algorithm for the backend conflict resolution module.\n\nSpecific requirements:\n1. Support three operation types: insert(position, character), delete(position), and retain(count)\n2. Implement the `transform(op1, op2)` function that takes two concurrent operations and returns transformed versions that can be applied in either order to reach the same document state\n3. Implement the `compose(op1, op2)` function that combines two sequential operations into one\n4. Handle edge cases: operations at the same position, overlapping deletes, operations on empty documents\n\nConstraints:\n- Language: TypeScript with strict mode\n- No external OT libraries (implement from scratch)\n- All functions must be pure (no side effects)\n- Include JSDoc comments explaining the mathematical properties (commutativity, convergence)\n- Time complexity for transform must be O(n) where n is the total length of operations\n\nOutput format:\n- Single TypeScript file with exported types and functions\n- Include at least 10 unit tests covering all operation type combinations\n- Add a README section explaining the algorithm with a visual diagram in ASCII art\n\nExample:\n  transform(insert(3, 'a'), insert(1, 'b')) should return:\n    [insert(4, 'a'), insert(1, 'b')]  // first op shifted right because second inserted before it"
+  },
+  {
+    "tier": "excellent",
+    "expected_range": [85, 100],
+    "prompt": "Context:\nOur production Kubernetes cluster (v1.28, 3 control plane nodes, 15 worker nodes across 3 availability zones) is experiencing intermittent pod evictions during peak hours (2-4 PM UTC). The affected pods are in the `payment-service` deployment (8 replicas, resource requests: 512Mi memory, 250m CPU; limits: 1Gi memory, 500m CPU). Metrics show node memory utilisation hitting 92-95% during these periods.\n\nTask:\nProvide a comprehensive troubleshooting and remediation plan.\n\nRequirements:\n1. Diagnostic commands to run (kubectl, metrics queries) with expected output interpretation\n2. Root cause analysis framework: distinguish between OOMKill, node pressure eviction, and preemption\n3. Short-term fix: adjust resource configurations to stop the bleeding\n4. Long-term solution: implement proper autoscaling (HPA + VPA + Cluster Autoscaler configuration)\n5. Monitoring: Prometheus alerting rules to detect this before it impacts users\n\nConstraints:\n- Do not suggest simply adding more nodes as the only solution\n- All YAML configurations must include resource quotas and limit ranges\n- Solutions must maintain zero-downtime during implementation\n- Account for PodDisruptionBudgets\n\nOutput format:\n- Numbered steps with exact commands\n- YAML configurations for each Kubernetes resource\n- Prometheus alerting rules in PromQL\n- Decision tree diagram (text-based) for future troubleshooting"
+  },
+  {
+    "tier": "excellent",
+    "expected_range": [85, 100],
+    "prompt": "Context:\nI am a data scientist at a healthcare company. We have a dataset of 50,000 patient records with 200 features including demographics, lab results, medication history, and diagnosis codes. The target variable is 30-day hospital readmission (binary: yes/no). The dataset is imbalanced with only 12% positive cases. We need an interpretable model because clinicians must understand and trust the predictions.\n\nTask:\nDesign and implement a complete ML pipeline for predicting 30-day readmissions.\n\nRequirements:\n- Feature engineering: handle missing values (MCAR/MAR/MNAR analysis), create interaction features for key clinical indicators, encode diagnosis codes using ICD-10 hierarchy\n- Model selection: compare at least 3 approaches (logistic regression with L1/L2, gradient boosting, and one other). Justify choices.\n- Handle class imbalance using SMOTE and class weights. Compare both approaches.\n- Evaluation: use AUROC, AUPRC, calibration curves, and net benefit analysis (decision curve). Do not rely on accuracy alone.\n- Interpretability: SHAP values for global and local explanations, partial dependence plots for top 5 features\n\nConstraints:\n- Python 3.11+, scikit-learn, XGBoost, SHAP\n- All random seeds fixed for reproducibility\n- Cross-validation: stratified 5-fold\n- No data leakage: all preprocessing fitted on training folds only\n- Maximum 500 lines of code\n\nOutput:\n- Single Python script with functions for each pipeline stage\n- Print a summary table comparing all models on all metrics\n- Save SHAP summary plot and calibration curves to ./output/\n- Include docstrings explaining clinical relevance of design choices"
+  },
+  {
+    "tier": "excellent",
+    "expected_range": [85, 100],
+    "prompt": "Context:\nWe are migrating a monolithic Django application (Python 3.10, Django 4.2, PostgreSQL 14) to a microservices architecture. The current monolith handles user authentication, product catalog, order management, payment processing, and notifications. Monthly active users: 500K. Peak concurrent requests: 2,000/second.\n\nTask:\nCreate a detailed migration plan with implementation specifications for the first phase: extracting the authentication service.\n\nRequirements:\n1. Service boundary definition: identify all authentication-related models, views, middleware, and their dependencies on other modules\n2. API contract: design the REST API for the new auth service (OpenAPI 3.0 spec) including endpoints for login, registration, token refresh, password reset, and OAuth2 provider integration\n3. Data migration strategy: how to move user tables without downtime, handle the transition period where both systems need to work\n4. Strangler fig pattern implementation: routing rules to gradually shift traffic from monolith to microservice\n5. Shared authentication: JWT-based token validation that both the monolith and new services can verify independently\n\nConstraints:\n- Zero downtime during migration\n- Maintain backward compatibility with existing mobile apps (API v1)\n- New service must be containerised (Dockerfile + docker-compose.yml)\n- Include database migration scripts (both forward and rollback)\n- Latency budget: authentication requests must complete within 200ms p99\n- Must pass existing integration test suite throughout migration\n\nOutput format:\n- Architecture diagram (text-based)\n- OpenAPI 3.0 YAML specification\n- Step-by-step migration runbook with rollback procedures\n- Docker and deployment configurations\n- Risk assessment matrix with mitigation strategies"
+  }
+]

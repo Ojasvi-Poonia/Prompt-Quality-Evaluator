@@ -36,7 +36,7 @@ Prompt engineering is critical but subjective. Teams spend hours debating whethe
 - **JSON output mode** for CI/CD pipeline integration and programmatic consumption
 - **Fully deterministic** -- same input always produces same output
 - **Zero external API calls** -- runs entirely offline after initial setup
-- **No transformer models** -- uses only spaCy (en_core_web_sm), NLTK, scikit-learn TF-IDF, textstat, and mathematical computation
+- **No transformer models** -- uses only spaCy (en_core_web_md, with sm fallback), NLTK, scikit-learn TF-IDF, textstat (Flesch-Kincaid + Coleman-Liau + ARI + Gunning Fog + SMOG + Linsear Write ensemble), wordfreq (modern multi-source word frequencies), pyspellchecker, lexicalrichness (MTLD/HD-D/MATTR), and mathematical computation
 
 ---
 
@@ -57,10 +57,13 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
 pip install -r requirements.txt
-python -m spacy download en_core_web_sm
+python -m spacy download en_core_web_md   # preferred (40 MB, includes word vectors)
+# python -m spacy download en_core_web_sm # fallback (12 MB, no vectors -- still works)
 ```
 
 NLTK data (`punkt_tab`, `stopwords`, `brown` corpus) is downloaded automatically on first run.
+
+The system prefers `en_core_web_md` (with word vectors for better semantic analysis and out-of-vocabulary detection). It falls back to `en_core_web_sm` if `md` is not installed.
 
 ### First Evaluation
 

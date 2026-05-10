@@ -84,9 +84,16 @@ def print_report(result: dict, console: Optional[Console] = None) -> None:
     suggestions = result.get("suggestions", [])
 
     color = _score_color(final_score / 100)
+    domain = result.get("detected_domain", "general")
+    task_penalty = result.get("task_penalty_applied", False)
+
     header = Text()
     header.append(f"  PROMPT QUALITY SCORE: {final_score:.1f}/100  ", style=f"bold {color}")
     header.append(f"  [{label}]", style=f"bold {color}")
+    if domain != "general":
+        header.append(f"   Domain: {domain}", style="bold cyan")
+    if task_penalty:
+        header.append("   [TASK PENALTY]", style="bold red")
     console.print(Panel(header, border_style=color, padding=(1, 2)))
 
     console.print("\n[bold]Pillar Breakdown[/bold]")

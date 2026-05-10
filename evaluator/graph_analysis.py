@@ -110,6 +110,27 @@ def completeness_score(node_data: List[Dict]) -> Tuple[float, List[str]]:
     return clamp(score), findings
 
 
+def has_context(node_data: List[Dict]) -> Tuple[float, List[str]]:
+    types_present = {nd["type"] for nd in node_data}
+    if "CONTEXT" in types_present:
+        return 1.0, ["Context section detected in discourse graph."]
+    return 0.0, ["No context section detected. Add background info."]
+
+
+def has_task(node_data: List[Dict]) -> Tuple[float, List[str]]:
+    types_present = {nd["type"] for nd in node_data}
+    if "TASK" in types_present:
+        return 1.0, ["Task section detected in discourse graph."]
+    return 0.0, ["No task section detected. Add a clear instruction."]
+
+
+def has_constraint(node_data: List[Dict]) -> Tuple[float, List[str]]:
+    types_present = {nd["type"] for nd in node_data}
+    if "CONSTRAINT" in types_present:
+        return 1.0, ["Constraint section detected in discourse graph."]
+    return 0.0, ["No constraint section detected. Add guardrails."]
+
+
 def connectivity_score(G: nx.DiGraph) -> Tuple[float, List[str]]:
     findings: List[str] = []
 
@@ -174,6 +195,55 @@ def information_flow_score(node_data: List[Dict]) -> Tuple[float, List[str]]:
     return clamp(score), findings
 
 
+def graph_centrality_score(G: nx.DiGraph) -> Tuple[float, List[str]]:
+    findings: List[str] = []
+    nodes = G.number_of_nodes()
+
+    if nodes <= 1:
+        return 0.4, ["Too few nodes for centrality analysis."]
+
+    if G.number_of_edges() == 0:
+        return 0.3, ["No edges -- sentences are completely disconnected."]
+
+    try:
+        pagerank = nx.pagerank(G, alpha=0.85, max_iter=100)
+    except Exception:
+        return 0.5, ["Could not compute PageRank."]
+
+    pr_values = list(pagerank.values())
+    if not pr_values:
+        return 0.5, ["Empty PageRank result."]
+
+    pr_max = max(pr_values)
+    pr_min = min(pr_values)
+    spread = pr_max - pr_min
+
+    avg_pr = sum(pr_values) / len(pr_values)
+    variance = sum((v - avg_pr) ** 2 for v in pr_values) / len(pr_values)
+    std = variance ** 0.5
+
+    cv = std / avg_pr if avg_pr > 0 else 0.0
+
+    from evaluator.utils import gaussian_score
+    score = gaussian_score(cv, mean=0.4, std=0.3)
+
+    if cv < 0.1:
+        findings.append(
+            f"All sentences equally central (CV={cv:.2f}). "
+            "Prompt lacks a 'core' sentence -- consider emphasising the main task."
+        )
+    elif cv > 0.8:
+        findings.append(
+            f"One sentence dominates (CV={cv:.2f}). Other sentences may be redundant."
+        )
+    else:
+        findings.append(
+            f"Good information hierarchy (CV={cv:.2f}, max PR={pr_max:.2f}, min PR={pr_min:.2f})."
+        )
+
+    return clamp(score), findings
+
+
 def complexity_score(G: nx.DiGraph) -> Tuple[float, List[str]]:
     findings: List[str] = []
     nodes = G.number_of_nodes()
@@ -181,6 +251,9 @@ def complexity_score(G: nx.DiGraph) -> Tuple[float, List[str]]:
 
     if nodes == 0:
         return 0.0, ["No nodes in graph."]
+
+    if nodes <= 1:
+        return 0.3, ["Single-sentence prompt -- structural complexity is minimal."]
 
     ratio = edges / nodes
 
@@ -208,9 +281,13 @@ def compute_all(text: str) -> dict:
     results = {}
     for name, fn in [
         ("completeness", lambda: completeness_score(node_data)),
+        ("has_context", lambda: has_context(node_data)),
+        ("has_task", lambda: has_task(node_data)),
+        ("has_constraint", lambda: has_constraint(node_data)),
         ("connectivity", lambda: connectivity_score(G)),
         ("information_flow", lambda: information_flow_score(node_data)),
         ("complexity", lambda: complexity_score(G)),
+        ("centrality", lambda: graph_centrality_score(G)),
     ]:
         score, findings = fn()
         results[name] = {"score": score, "findings": findings}

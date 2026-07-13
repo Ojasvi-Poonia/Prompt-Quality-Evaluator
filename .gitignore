@@ -42,3 +42,20 @@ data/excellent_test.txt
 .env
 .env.*
 !.env.example
+
+# Paper: keep the LaTeX source, ignore exported/compiled formats
+*.docx
+*.doc
+*.odt
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.out
+*.synctex.gz
+*.toc

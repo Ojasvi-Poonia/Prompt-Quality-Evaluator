@@ -452,7 +452,7 @@ We treated reproducibility as a requirement from the start. The scorer is determ
 
 Two scripts regenerate the tables. Running \texttt{run\_benchmark.py -{}-offline} reproduces the per-prompt comparison of Table \ref{tab:fullbench} along with the correlation and agreement figures, and \texttt{run\_ablation.py} reproduces the pillar ablation of Table \ref{tab:ablation}. Neither needs a network connection, because the measured Gemini scores ship with the repository as \texttt{benchmark\_real\_results.json}. Regenerating the judge scores from scratch is the only step that needs an API key, and the judge harness for doing so ships too.
 
-One detail of the packaging carries an argument. The scorer's dependency list contains no LLM SDK of any kind; the judge's dependencies live in a separate \texttt{requirements-benchmark.txt}. So the central claim of this paper, that nothing neural runs at evaluation time, is not merely asserted in prose. It can be checked by reading what \texttt{pip} installs.
+The packaging carries one argument worth stating. The scorer's dependency list contains no LLM SDK of any kind, and the judge's dependencies sit apart in \texttt{requirements-benchmark.txt}. A reader who wants to verify that nothing neural runs at evaluation time can therefore check what \texttt{pip} installs rather than take our word for it.
 
 One caveat is worth stating plainly, since it bit us. Several metrics fall back to a neutral $0.5$ when the library they depend on is absent, so a partial install quietly shifts scores instead of failing loudly. The lock file exists to prevent exactly that.
 
@@ -635,12 +635,18 @@ The dimension scores are worth reading closely, because they show the modifiers 
 
 Gemini takes the opposite route and drives nearly every dimension to zero. The exception is instructive. Gemini scores ``fix it'' at $1.00$ for Conciseness, a perfect mark, because the prompt is undeniably short. Our short-text cap holds us at $0.35$. That single cell is the first sighting of the Conciseness problem that Section \ref{sec:failure1} takes apart.
 
-\subsection{Case 2: ``hello fix this ehing'' (terrible tier, with typo)}
-This prompt is the reason the spell-checker exists at all. ``ehing'' is gibberish. An early build of our scorer happily treated it as a technical term, since the 1961 Brown corpus has no entry for ``ehing'' and an unknown word in the zipf-low band looked, to that build, like evidence of specificity. So a prompt that deserved Poor floated up to Below Average. A straight bug.
+\subsection{Case 2: ``hello fix this ehing'' (typo handling)}
+This prompt sits outside the benchmark; we use it to show one mechanism, and we report no judge score for it because we did not collect one. It is the reason the spell-checker exists at all. ``ehing'' is gibberish. An early build of our scorer happily treated it as a technical term, since no word-frequency table has an entry for ``ehing'' and an unknown word in the zipf-low band looked, to that build, like evidence of specificity. A prompt that deserved Poor floated up to Below Average. A straight bug.
 
-We fixed it by running pyspellchecker before specificity is counted. Now ``ehing'' is flagged as a likely typo with the suggestion ``thing'', and specificity drops $0.5$ rather than rising.
+We fixed it by running pyspellchecker before specificity is counted. The prompt now scores 12.0, \emph{Poor}, and the report says exactly why. Three of the 41 findings fire on the single bad token:
 
-Final numbers: us 12.0, Gemini 0. Both Poor, both right. And ours says why, in the finding text: \emph{``Detected 1 likely typo: `ehing' $\to$ `thing'. Specificity reduced by 0.50.''} Gemini notes the typo somewhere in its rationale paragraph but never offers the correction.
+\begin{itemize}
+\item \texttt{grammar}: \emph{``Likely typos (1): `ehing' $\to$ `thing'.''}
+\item \texttt{specificity}: \emph{``Detected 1 likely typo(s), specificity reduced (typos are not real technical terms).''}
+\item \texttt{lexical\_sophistication}: \emph{``Excluded 1 likely typo(s) from sophistication calculation.''}
+\end{itemize}
+
+This is the explainability argument in miniature. The score is 12.0 and the reason is a named token with a suggested correction, not a paragraph of prose that has to be read and interpreted.
 
 \subsection{Case 3: Average-tier coding prompt}
 The prompt is: \emph{``Write a Python function that takes a list of numbers and returns the top 3 largest values. Handle edge cases like empty lists and lists with fewer than 3 elements.''}
@@ -653,15 +659,15 @@ Our top-scoring prompt in the excellent tier is \#19, a healthcare data-scientis
 The same gap repeats across the whole excellent tier. Our four come in at 72.4, 73.9, 74.3, 79.2. Gemini's four are 93, 95, 95, 95. It looks like Gemini is tuned so that any prompt with a tidy section structure floors at $\geq 93$. We reward that structure too, but once the dimensions are already strong, we stop piling bonus on top of bonus.
 
 \subsection{Case 5: Context Completeness divergence}
-This one pins down a single moderate dimension on its own. The prompt:
+This one pins down a single moderate dimension, and it is the case that sent us back to the code.
 
-\emph{``I'm running Django 4.2 with PostgreSQL 14 and a Redis cache. We have a Task model with fields title (max 200), status (todo/in\_progress/done), priority (1--5), and due\_date. Write a ViewSet that supports CRUD with role-based permissions.''}
+Take two prompts from the benchmark. Prompt \#8 is \emph{``I need a function that sorts things. Make it fast.''} Ten words, carrying no context at all. Prompt \#13 is an 86-word specification for a \texttt{merge\_sorted\_lists} function that fixes the signature, the element types, the edge cases, and the complexity target.
 
-Fifty words, and exactly the context the task needs. We score Context Completeness at $0.50$, partly because the length factor nips a 50-word prompt slightly and partly because the CONTEXT discourse node is there but brief. Gemini gives $0.95$, reasoning that short as it is, the context fits.
+We score Context Completeness at $0.76$ for the first and $0.45$ for the second. Gemini scores them $0.00$ and $1.00$. So we do not simply disagree with the judge about the margin. We rank the two prompts in the opposite order, and the judge is plainly the one who is right.
 
-The gap is a definition gap. We read context off surface markers: is there a CONTEXT node, how long is the prompt, how tight is the topic? Gemini reads semantic fit: does this context actually serve this task? ``Django 4.2 with PostgreSQL 14 and Redis'' is the right backdrop for a CRUD ViewSet only if you know what a ViewSet needs. Gemini knows. We do not.
+The weights say why. The dimension leans hardest on \texttt{has\_context} (weight $0.30$), which asks only whether the discourse graph found a CONTEXT node. In prompt \#8 the words ``I need'' match a CONTEXT pattern, so \texttt{has\_context} returns $1.00$ and hands over its full $0.30$. In prompt \#13 nothing matches, because the prompt states its requirements directly and never frames them with ``I am building'' or ``we currently have'', so \texttt{has\_context} returns $0.00$. Topic focus compounds the error: a two-sentence prompt is trivially on-topic and scores $0.77$, while the longer specification, ranging across types and edge cases, scores only $0.53$.
 
-Section \ref{sec:limitations} returns to this.
+The metric is reading how a prompt is phrased, not whether it carries any context. Section \ref{sec:failure2} follows the consequence through the whole benchmark.
 
 \section{Ablation Study}
 
@@ -710,12 +716,17 @@ So the two systems are not measuring the same construct under the same name. Our
 
 We report the $0.240$ rather than quietly dropping the dimension, but we would not read it as evidence that our Conciseness metric is broken and Gemini's is sound. The honest summary is that Conciseness is the one dimension where we do not trust the benchmark to adjudicate.
 
-\subsection{Failure mode 2: Context as semantic appropriateness}
-Case 5 was the cleanest instance; here is another. \emph{``Write a SQL injection prevention function for a PHP application using PDO.''} Fourteen words. We put Context Completeness at $0.32$. Gemini puts it at $0.85$, because ``PHP application using PDO'' is exactly the context this task needs.
+\subsection{Failure mode 2: Context detected by phrasing, not by presence}
+\label{sec:failure2}
+Case 5 is not one unlucky row. Run the whole benchmark and the shape is systematic, and it goes wrong in both directions at once.
 
-It is the Case 5 mismatch again: Gemini checking fit, us counting markers. The measured Pearson on this dimension, $0.509$, is only moderate, and the failure surfaces every time the prompt is short and its context is short but spot-on for the ask.
+Our Context Completeness scores sit in a narrow band, $0.29$ to $0.76$ across all 20 prompts. Gemini's use the full range: zero on the eight prompts that carry no context, $0.10$ to $0.30$ across the average tier, and $0.90$ or above on every good and excellent prompt. Set the two side by side and we are far too generous at the bottom and far too stingy at the top. On the four \emph{poor}-tier prompts, none of which supply any context, Gemini returns $0.00$ every time while we return between $0.41$ and $0.76$. On three of the four \emph{good}-tier prompts, which specify their task in real detail, Gemini returns $0.90$ to $1.00$ while we sit at $0.45$ to $0.47$.
 
-Two ways to close it without an LLM at scoring time. One, a labelled corpus to train a context-appropriateness classifier on top of the existing 41 features. Two, a retrieval setup matching the prompt against canonical task templates and the context each expects. Neither runs an LLM during evaluation. Both need data we have not collected yet.
+One metric drives most of it. \texttt{has\_context} carries the largest weight in the dimension, and it fires on surface phrasing rather than on content. ``I need'', ``I have'', and ``we are'' all trip it, whatever follows them. A prompt opening ``I need a function that sorts things'' therefore owns a CONTEXT node and collects the full $0.30$, while a prompt that supplies genuine background without a first-person frame collects nothing at all.
+
+That is what holds the measured Pearson on this dimension down to $0.509$. The ranking survives well enough to keep the correlation moderate rather than weak, but the calibration is compressed and, on the pair in Case 5, locally inverted.
+
+We want to be careful about what this does and does not show. Most of it is our bug, not a wall in front of classical NLP. A CONTEXT classifier that asked whether a sentence supplies background, instead of whether it opens with a first-person phrase, would recover much of the gap and would still run offline and deterministically. Underneath that, though, sits a question we genuinely cannot reach: not whether context is present, but whether the context that is present is the context this particular task requires. Two routes stay open there without putting an LLM in the scoring path. One is a labelled corpus and a context-appropriateness classifier trained on top of the existing 41 features. The other is retrieval, matching the prompt against canonical task templates and the context each one expects. Both need data we have not collected.
 
 \subsection{Failure mode 3: Code-heavy prompts}
 The two failure modes that follow sit outside the benchmark. Neither pattern appears in the 20-prompt corpus, so we probed them separately with our own scorer. We did not run the judge on them, and we report no Gemini score for either. They are qualitative observations, not measurements, and we flag them as such rather than dress them up.
@@ -739,7 +750,7 @@ The strong dimensions, Structure ($r = 0.909$), Information Richness ($r = 0.860
 There is a bonus we did not plan for. Since every score is assembled from named metrics, the system can tell you the exact feature that sank it. Specificity drops to $0.40$ and the output names the typo and the fix. The score caps at 12 and the report shows both the cap and the missing imperative behind it. Gemini hands back a number and a paragraph of prose. Our report names the metric, its value, and the finding text behind it, so a user can trace the score back to the thing that caused it.
 
 \subsection{What classical NLP misses}
-Context Completeness ($r = 0.509$) is the cleanest warning sign. Anywhere a metric hinges on grasping what the task actually requires, or whether the material on the page serves that intent, we fall short. Tone sits in that bucket. So do genre conventions and domain norms. Surface features do not reach any of them.
+Context Completeness ($r = 0.509$) is where the ceiling shows, though the ablation in Section \ref{sec:failure2} should temper how much we read into the number. A good part of that gap is a regex firing on ``I need'', which is a bug and not a boundary. What remains after the bug is fixed is the real thing: anywhere a metric hinges on grasping what the task actually requires, or whether the material on the page serves that intent, we fall short. Tone sits in that bucket. So do genre conventions and domain norms. Surface features do not reach any of them.
 
 Conciseness ($r = 0.240$) is the lower number, but as Section \ref{sec:failure1} argued, it is the muddier result. Part of that gap is our short-text floor and part is a judge that treats brevity as concision. We would not lean on it as evidence about classical NLP either way.
 
@@ -769,7 +780,7 @@ The Table \ref{tab:rubric} weights came from intuition, nudged until tier monoto
 English only, for now. The \texttt{is\_likely\_english} check flags other languages but will not score them. Going multilingual would mean per-language frequency tables and translated canonical templates.
 
 \subsection{Semantic appropriateness}
-Failure mode 2 showed Context Completeness turning on whether the context actually fits the task, which is a question our surface markers cannot answer. That is the single largest hole in what the pipeline can see.
+Failure mode 2 split this into two problems that are easy to confuse. The first is a defect we own: \texttt{has\_context} keys on first-person phrasing instead of on content, and it is fixable without leaving classical NLP. The second is the real limit. Deciding whether the context a prompt supplies is the context its task actually needs is a semantic judgement, and no count of surface markers reaches it. That second problem is the largest hole in what the pipeline can see, and we have not closed it.
 
 \section{Conclusion and Future Work}
 

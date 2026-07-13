@@ -1,0 +1,20 @@
+# Dependencies for the LLM judge baseline (llm_evaluator/) only.
+#
+# These are kept out of requirements.txt on purpose. The scorer in evaluator/
+# runs no neural inference and calls no API, and its dependency list should be
+# checkable proof of that: installing it must never pull in an LLM SDK.
+#
+# You only need this file to regenerate the Gemini judge scores from scratch:
+#
+#     pip install -r requirements-benchmark.txt
+#     cp .env.example .env      # then add your key
+#     python run_benchmark.py
+#
+# Reproducing every table in the paper needs none of it:
+#
+#     python run_benchmark.py --offline
+
+-r requirements.txt
+
+google-genai>=1.0.0
+openai>=1.50.0

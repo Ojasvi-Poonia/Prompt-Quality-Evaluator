@@ -494,11 +494,11 @@ def objectivity_score(text: str) -> Tuple[float, List[str]]:
 
     try:
         from textblob import TextBlob
-    except ImportError:
-        return NEUTRAL_SCORE, ["TextBlob not installed -- objectivity analysis skipped."]
+        blob = TextBlob(text)
+        subjectivity = float(blob.sentiment.subjectivity)
+    except Exception:
+        return NEUTRAL_SCORE, ["TextBlob unavailable -- objectivity analysis skipped."]
 
-    blob = TextBlob(text)
-    subjectivity = float(blob.sentiment.subjectivity)
     score = clamp(1.0 - subjectivity * 0.7)
 
     if subjectivity < 0.3:

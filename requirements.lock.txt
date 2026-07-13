@@ -1,0 +1,35 @@
+# Exact dependency versions used to produce every number reported in the paper.
+# Use this file to reproduce the published results bit for bit:
+#
+#     pip install -r requirements.lock.txt
+#     python -m spacy download en_core_web_md   # model version 3.8.0
+#
+# requirements.txt carries relaxed (>=) constraints for ordinary use.
+# This file is the pinned counterpart for reproduction.
+#
+# IMPORTANT: install all of these. Several metrics degrade to a neutral 0.5
+# when their library is missing rather than failing loudly, which silently
+# changes scores. objectivity needs textblob, tone_consistency needs
+# vaderSentiment, and vocabulary_richness needs lexicalrichness.
+
+spacy==3.8.14
+textstat==0.7.13
+language-tool-python==3.4.0
+nltk==3.9.4
+scikit-learn==1.8.0
+tiktoken==0.13.0
+networkx==3.6.1
+numpy==2.4.6
+scipy==1.17.1
+matplotlib==3.10.9
+rich==15.0.0
+pytest==9.0.3
+wordfreq==3.1.1
+pyspellchecker==0.9.0
+lexicalrichness==0.5.1
+vaderSentiment==3.3.2
+markdown-it-py==4.2.0
+textblob==0.20.0
+
+# spaCy model (installed separately, not via pip index):
+#   en_core_web_md==3.8.0

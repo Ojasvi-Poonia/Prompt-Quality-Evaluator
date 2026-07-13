@@ -1,120 +1,326 @@
-<p align="center">
-  <h1 align="center">Prompt Quality Evaluator</h1>
-  <p align="center">
-    A deterministic, transformer-free scoring engine for LLM prompts.<br/>
-    Analyzes prompt quality across 19 metrics and 8 rubric dimensions using classical NLP only.
-  </p>
-</p>
+# Prompt Quality Evaluator
 
-<p align="center">
-  <a href="#features">Features</a> |
-  <a href="#quick-start">Quick Start</a> |
-  <a href="#usage">Usage</a> |
-  <a href="#how-it-works">How It Works</a> |
-  <a href="#api-reference">API Reference</a> |
-  <a href="#contributing">Contributing</a> |
-  <a href="#license">License</a>
-</p>
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Tests](https://img.shields.io/badge/tests-35%20passing-brightgreen.svg)](tests/test_evaluator.py)
+[![Deterministic](https://img.shields.io/badge/scoring-deterministic-blueviolet.svg)](#determinism)
+
+Reference implementation for the paper **"A Multi-Pillar Prompt Quality Evaluation System Using Rule-Based, Semantic-Structural, Information-Theoretic, and Discourse Graph Metrics Without LLM Judgment."**
+
+Scoring an LLM prompt usually means paying a second LLM to grade it. The cost grows with every call, and the verdict drifts between runs even when the input does not change. This project scores the prompt text directly, using classical NLP and no neural inference at evaluation time.
+
+It computes **41 metrics** across **4 pillars**, folds them into **8 rubric dimensions**, and returns a single score in `[0, 100]` along with a named finding for every metric. It is deterministic, runs offline, and costs nothing per evaluation.
+
+Against Gemini 2.5 Flash Lite on a 20-prompt benchmark it reaches **Pearson r = 0.932** and **Spearman ρ = 0.893**.
 
 ---
 
-## Why This Exists
+## Contents
 
-Prompt engineering is critical but subjective. Teams spend hours debating whether a prompt is "good enough" with no objective baseline. Existing solutions either require sending your prompt to an LLM (defeating the purpose) or offer only surface-level checks like word count.
-
-**Prompt Quality Evaluator** solves this by providing a deterministic, locally-run scoring engine that evaluates prompts across 19 metrics derived from three complementary analytical approaches -- without ever calling an LLM or loading a transformer model.
-
----
-
-## Features
-
-- **19 individual metrics** across three analytical pillars (rule-based, semantic-structural, information-theoretic)
-- **Discourse graph analysis** using NetworkX -- classifies sentences by function (context, task, constraint, example) and evaluates structural flow
-- **8 rubric dimensions** that map raw metrics into human-readable quality categories
-- **Radar chart visualization** saved as PNG for reports and documentation
-- **Rich terminal output** with colored score bars, findings, and improvement suggestions
-- **JSON output mode** for CI/CD pipeline integration and programmatic consumption
-- **Fully deterministic** -- same input always produces same output
-- **Zero external API calls** -- runs entirely offline after initial setup
-- **No transformer models** -- uses only spaCy (en_core_web_md, with sm fallback), NLTK, scikit-learn TF-IDF, textstat (Flesch-Kincaid + Coleman-Liau + ARI + Gunning Fog + SMOG + Linsear Write ensemble), wordfreq (modern multi-source word frequencies), pyspellchecker, lexicalrichness (MTLD/HD-D/MATTR), and mathematical computation
+- [Results](#results)
+- [Install](#install)
+- [Quick start](#quick-start)
+- [Reproducing the paper](#reproducing-the-paper)
+- [How it works](#how-it-works)
+- [The 41 metrics](#the-41-metrics)
+- [Rubric dimensions](#rubric-dimensions)
+- [Python API](#python-api)
+- [CI integration](#ci-integration)
+- [Testing](#testing)
+- [Limitations](#limitations)
+- [Citation](#citation)
+- [License](#license)
 
 ---
 
-## Quick Start
+## Results
 
-### Prerequisites
+Benchmarked against Gemini 2.5 Flash Lite over 20 prompts spanning five quality tiers. Raw measurements are checked in at [`benchmark_real_results.json`](benchmark_real_results.json).
 
-- Python 3.10+
-- pip
+| Statistic | Value |
+|---|---|
+| Pearson r (final score) | **0.932** (p = 2.30 × 10⁻⁹) |
+| Spearman ρ (final score) | **0.893** (p = 1.14 × 10⁻⁷) |
+| Mean absolute difference | 14.4 points |
+| Exact verdict-label agreement | 40% (8/20) |
+| Agreement within one band | 80% (16/20) |
 
-### Installation
+Reproduce with `python run_benchmark.py --offline` (no API key needed).
+
+### Per-dimension correlation
+
+| Dimension | Pearson r | Strength |
+|---|---|---|
+| Structure | 0.909 | strong |
+| Information Richness | 0.860 | strong |
+| Specificity | 0.825 | strong |
+| Task Definition | 0.799 | strong |
+| Constraint Specification | 0.695 | strong |
+| Clarity | 0.576 | moderate |
+| Context Completeness | 0.509 | moderate |
+| Conciseness | 0.240 | weak |
+
+Conciseness is the weakest dimension, and the benchmark cannot cleanly adjudicate it. The judge's Conciseness scores are near-constant (mean 0.89, and it rates the bare prompt "fix it" a perfect 1.00), which caps the achievable correlation before our metrics get a vote. It appears to read conciseness as brevity. We read it structurally, with a short-text floor. Neither is really the construct a prompt engineer wants. See [Limitations](#limitations).
+
+### Cost and latency
+
+| Property | This project | Gemini judge |
+|---|---|---|
+| Mean latency per evaluation | 1.2 s | 3.4 s |
+| Cost per evaluation | $0 | ~$0.005 |
+| Internet required | no | yes |
+| Deterministic | yes | no |
+| Explanations | 41 named metrics | 1 paragraph |
+
+---
+
+## Install
+
+Requires Python 3.10 or newer.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/prompt-quality-evaluator.git
-cd prompt-quality-evaluator
+git clone https://github.com/Ojasvi-Poonia/Prompt-Quality-Evaluator.git
+cd Prompt-Quality-Evaluator
 
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 
 pip install -r requirements.txt
-python -m spacy download en_core_web_md   # preferred (40 MB, includes word vectors)
-# python -m spacy download en_core_web_sm # fallback (12 MB, no vectors -- still works)
+python -m spacy download en_core_web_md
 ```
 
-NLTK data (`punkt_tab`, `stopwords`, `brown` corpus) is downloaded automatically on first run.
+`en_core_web_md` (40 MB) carries the word vectors that Pillar 2 needs. The system falls back to `en_core_web_sm` if `md` is absent, but semantic scores degrade.
 
-The system prefers `en_core_web_md` (with word vectors for better semantic analysis and out-of-vocabulary detection). It falls back to `en_core_web_sm` if `md` is not installed.
+NLTK data (`punkt_tab`, `stopwords`, `brown`) downloads automatically on first run.
 
-### First Evaluation
+> **Install every dependency in `requirements.txt`.** Several metrics fall back to a neutral 0.5 when their library is missing, so a partial install silently changes scores rather than failing loudly. `objectivity` needs TextBlob, `tone_consistency` needs vaderSentiment, and `vocabulary_richness` needs lexicalrichness.
+
+Disk footprint at evaluation time is roughly 700 MB, almost all of it the spaCy model and the Java grammar tables bundled with language-tool-python. Peak memory is about 1.5 GB. No GPU, no network.
+
+---
+
+## Quick start
 
 ```bash
 python main.py "Write a Python function that sorts a list of integers"
 ```
 
----
-
-## Usage
-
 ### CLI
 
 ```bash
-# Evaluate an inline prompt
-python main.py "Your prompt text here"
+python main.py "Your prompt text here"        # evaluate an inline prompt
+python main.py --file prompt.txt              # evaluate from a file
+python main.py "Your prompt" --json           # machine-readable output
+python main.py "Your prompt" --verbose        # show all 41 metric scores
+python main.py "Your prompt" --no-chart       # skip radar chart generation
+python main.py "Your prompt" --output reports/  # chart output directory
 
-# Evaluate from a file
-python main.py --file prompt.txt
-
-# JSON output (for scripts and pipelines)
-python main.py "Your prompt" --json
-
-# Show all 19 individual metric scores
-python main.py "Your prompt" --verbose
-
-# Skip radar chart generation
-python main.py "Your prompt" --no-chart
-
-# Custom output directory for the radar chart
-python main.py "Your prompt" --output reports/
+python main.py "Your prompt" --rewrite        # emit an improved prompt template
+python main.py "Your prompt" --confidence     # bootstrap confidence interval
+python main.py "Your prompt" --ablation       # per-pillar contribution breakdown
+python main.py "Your prompt" --compare other.txt   # score two prompts side by side
+python main.py --batch prompts.json --export-csv out.csv   # batch mode
 ```
 
-### Python API
+---
+
+## Reproducing the paper
+
+Every table in the paper regenerates from this repository. The measured Gemini scores are checked in, so the correlation figures reproduce **offline, with no API key**.
+
+```bash
+# Per-prompt comparison, correlations, tier means, label agreement.
+# Reuses the stored Gemini scores. No network, no key.
+python run_benchmark.py --offline
+
+# Pillar ablation. Neutralises each pillar in turn and recomputes Pearson r.
+python run_ablation.py
+
+# Test suite: 35 cases, roughly one per metric plus aggregation logic.
+pytest tests/ -v
+```
+
+### Regenerating the judge scores
+
+The LLM judge is part of this repository, in [`llm_evaluator/`](llm_evaluator/). Every number we report about Gemini depends on how Gemini was asked, so the exact prompt template, the `temperature=0.0` setting, and the response parsing are all readable rather than described. If you disagree with how the question was posed, you can change it and re-run.
+
+```bash
+pip install -r requirements-benchmark.txt   # google-genai, openai
+cp .env.example .env                        # then paste your key into .env
+python run_benchmark.py                     # live run, overwrites the results file
+```
+
+`.env` is gitignored. Never commit it.
+
+The judge's dependencies are deliberately kept **out** of `requirements.txt`. Installing the scorer must never pull in an LLM SDK, so the paper's central claim (nothing neural runs at evaluation time) is checkable by reading what `pip` installs, not just by trusting the prose.
+
+### Determinism
+
+The scorer returns the same value on every call for the same input. There is no sampling, no temperature, and no network. The test suite asserts this directly, and the paper reports one prompt scored 100 times with an identical result each time.
+
+---
+
+## How it works
+
+```
+                          Prompt text
+                               |
+                     spaCy preprocessing
+           (tokens, POS, NER, dependency parse)
+                               |
+        +--------------+-------+-------+--------------+
+        |              |               |              |
+    Pillar 1       Pillar 2        Pillar 3       Pillar 4
+   Rule-Based      Semantic       Info-Theory     Discourse
+  (16 metrics)   (10 metrics)     (7 metrics)   Graph (8 metrics)
+        |              |               |              |
+        +--------------+-------+-------+--------------+
+                               |
+                  41 raw scores in [0, 1]
+                               |
+              Rubric weighting matrix (8 x 41)
+                               |
+       length factor  x  task penalty cap  x  excellence bonus
+                               |
+        Final score [0, 100] + 8 dimensions + 41 findings
+```
+
+Three modifiers sit on top of the weighted dimensions:
+
+1. **Length factor.** Prompts under 30 words are scaled down. A four-word prompt has no room to demonstrate structure or context.
+2. **Task penalty cap.** If a prompt carries no clear instruction, the score is clipped (12 to 40 depending on length). No amount of clean formatting lifts a prompt with no task above this ceiling.
+3. **Excellence bonus.** Applied only when *all four* pillar means clear 0.6, so a prompt earns it by being good across the board rather than by gaming one pillar.
+
+---
+
+## The 41 metrics
+
+### Pillar 1: Rule-based (16)
+
+| Metric | What it measures |
+|---|---|
+| `length` | Word count, Gaussian centred at 150 words |
+| `grammar` | LanguageTool matches plus spellchecker typos, per sentence |
+| `readability` | Mean of six formulas (Flesch-Kincaid, Coleman-Liau, ARI, Gunning Fog, SMOG, Linsear Write) |
+| `specificity` | Density of entities, numbers, technical terms, quoted strings, code tokens |
+| `structure` | Bullets, numbered lists, headers, fenced code, section labels |
+| `task_signal` | Imperative verbs, question patterns, deliverable nouns |
+| `constraint` | Negations, limits, format directives, audience specs, tone directives |
+| `contradiction` | Conflicting instructions and incompatible tone pairs |
+| `reference_similarity` | Cosine similarity to canonical prompts in the detected domain |
+| `persona_signal` | Role-setting phrases ("you are a senior X", "act as Y") |
+| `few_shot_quality` | In-context examples: input/output pairs, arrow mappings |
+| `hedging` | Density of hedge phrases from a 33-item lexicon |
+| `safety` | Prompt-injection patterns ("ignore previous instructions") |
+| `output_schema` | Explicit output format specs (JSON, types, signatures) |
+| `compound_task_count` | Distinct task verbs chained via dependency conjunctions |
+| `imperative_strength` | Sentence-initial verbs minus politeness softeners |
+
+### Pillar 2: Semantic-structural (10)
+
+| Metric | What it measures |
+|---|---|
+| `coherence` | Cosine similarity between consecutive sentences (TF-IDF 0.4, word vectors 0.6) |
+| `semantic_density` | Unique meaningful lemmas over total tokens |
+| `topic_focus` | Mean cosine distance of each sentence to the document centroid |
+| `lexical_sophistication` | Word rarity from `wordfreq` zipf scores |
+| `sentence_flow` | Coefficient of variation of sentence lengths |
+| `reference_resolution` | Ambiguous pronouns without a nearby antecedent |
+| `tone_consistency` | Variance of VADER sentiment across sentences |
+| `objectivity` | Inverse of TextBlob subjectivity |
+| `syntactic_complexity` | Mean dependency-tree depth and clause count |
+| `discourse_markers` | Logical connectives across six PDTB categories |
+
+### Pillar 3: Information-theoretic (7)
+
+Tokenised with tiktoken `cl100k_base`. Every metric here applies a short-text cap of 0.3 below 30 tokens, because entropy measures are biased upward on short text.
+
+| Metric | What it measures |
+|---|---|
+| `shannon_entropy` | Normalised entropy of the token distribution |
+| `redundancy` | Token repetition, with a heavy penalty past 60% repeats |
+| `information_density` | Entropy per token |
+| `vocabulary_richness` | Mean of TTR, MTLD, HD-D, and MATTR |
+| `ngram_repetition` | Repeated bigrams and trigrams |
+| `burstiness` | Entropy variance across five equal token chunks |
+| `sentence_repetition` | Sentence pairs with Jaccard overlap above 0.7 |
+
+### Pillar 4: Discourse graph (8)
+
+Each sentence is classified as CONTEXT, TASK, CONSTRAINT, EXAMPLE, or OTHER. A directed graph links consecutive sentences and any pair sharing noun chunks or named entities. Standard graph algorithms then turn the structure into numbers.
+
+| Metric | What it measures |
+|---|---|
+| `completeness` | Are CONTEXT, TASK, and CONSTRAINT all present? |
+| `has_context` / `has_task` / `has_constraint` | Binary presence indicators |
+| `connectivity` | Graph density over the number of weakly connected components |
+| `information_flow` | Whether CONTEXT precedes TASK precedes CONSTRAINT |
+| `complexity` | Edge-to-node ratio, Gaussian-scored |
+| `centrality` | PageRank spread. A flat distribution means no sentence is the focus; a spiked one means a single sentence dominates. Both are penalised. |
+
+---
+
+## Rubric dimensions
+
+The 41 metrics collapse into 8 dimensions through a fixed weighting matrix. Each row sums to 1.0.
+
+| Dimension | Contributing metrics (weight) |
+|---|---|
+| **Clarity** | grammar (.18), readability (.15), syntactic_complexity (.15), hedging (.14), reference_resolution (.10), sentence_flow (.10), objectivity (.10), tone_consistency (.08) |
+| **Specificity** | specificity (.30), lexical_sophistication (.20), output_schema (.15), semantic_density (.15), reference_similarity (.10), persona_signal (.10) |
+| **Structure** | structure (.20), completeness (.10), information_flow (.10), centrality (.10), coherence (.10), discourse_markers (.10), reference_similarity (.10), few_shot_quality (.10), output_schema (.10) |
+| **Task Definition** | task_signal (.30), imperative_strength (.15), has_task (.15), safety (.15), compound_task_count (.10), contradiction (.10), persona_signal (.05) |
+| **Context Completeness** | has_context (.30), topic_focus (.20), length (.20), persona_signal (.15), few_shot_quality (.15) |
+| **Constraint Specification** | constraint (.35), has_constraint (.20), output_schema (.20), contradiction (.15), safety (.10) |
+| **Information Richness** | shannon_entropy (.25), vocabulary_richness (.25), information_density (.25), semantic_density (.25) |
+| **Conciseness** | redundancy (.25), ngram_repetition (.25), sentence_repetition (.25), burstiness (.25) |
+
+### Scoring scale
+
+| Range | Label |
+|---|---|
+| 85 to 100 | Excellent |
+| 75 to 84 | Very Good |
+| 60 to 74 | Good |
+| 45 to 59 | Average |
+| 25 to 44 | Below Average |
+| 0 to 24 | Poor |
+
+---
+
+## Python API
 
 ```python
 from evaluator.scorer import evaluate
 
 result = evaluate("Your prompt text here")
 
-print(result["final_score"])        # 0-100
-print(result["label"])              # "Good", "Excellent", etc.
-print(result["rubric_dimensions"])  # List of 8 dimension dicts
-print(result["pillar_scores"])      # Per-pillar aggregates
-print(result["suggestions"])        # Top 3 improvement suggestions
+result["final_score"]        # float, 0 to 100
+result["label"]              # "Good", "Excellent", ...
+result["rubric_dimensions"]  # 8 dicts: name, score, label, findings
+result["raw_metrics"]        # all 41 metrics, keyed "<pillar>.<metric>"
+result["pillar_scores"]      # per-pillar means
+result["suggestions"]        # ranked improvement suggestions
 ```
 
-### CI/CD Integration
+Each pillar module also exposes its metrics individually:
+
+```python
+from evaluator.rule_based import compute_all, grammar_quality
+
+score, findings = grammar_quality("Your text here")
+all_metrics = compute_all("Your text here")
+```
+
+Every metric function returns `(score: float, findings: list[str])` with the score in `[0, 1]`.
+
+---
+
+## CI integration
+
+Because scoring is deterministic and free, it works as a regression gate on prompts held in version control.
 
 ```yaml
-# GitHub Actions example
 - name: Check prompt quality
   run: |
     score=$(python main.py --json --no-chart "$(cat prompts/system_prompt.txt)" | jq '.final_score')
@@ -126,261 +332,88 @@ print(result["suggestions"])        # Top 3 improvement suggestions
 
 ---
 
-## How It Works
-
-The evaluator operates in four stages:
-
-```
-Input Prompt
-    |
-    v
-+-------------------+    +------------------------+    +------------------------+
-| Pillar 1          |    | Pillar 2               |    | Pillar 3               |
-| Rule-Based        |    | Semantic-Structural    |    | Information-Theoretic  |
-| (7 metrics)       |    | (6 metrics)            |    | (6 metrics)            |
-+-------------------+    +------------------------+    +------------------------+
-    |                         |                             |
-    v                         v                             v
-+------------------------------------------------------------------+
-| Discourse Graph Analysis (NetworkX)                              |
-| Sentence classification + structural flow metrics                |
-+------------------------------------------------------------------+
-    |
-    v
-+------------------------------------------------------------------+
-| Rubric Mapping                                                   |
-| 19 raw metrics -> 8 weighted rubric dimensions                   |
-+------------------------------------------------------------------+
-    |
-    v
-+------------------------------------------------------------------+
-| Final Score (0-100) + Label + Radar Chart + Suggestions          |
-+------------------------------------------------------------------+
-```
-
-### Pillar 1: Rule-Based Metrics
-
-| Metric | What It Measures | Method |
-|---|---|---|
-| Length | Prompt word count against ideal range | Gaussian curve centered at 150 words |
-| Grammar | Grammatical correctness | LanguageTool error detection |
-| Readability | Flesch-Kincaid grade level | textstat library, ideal grade 8-12 |
-| Specificity | Named entities, numbers, technical terms, code tokens | spaCy NER + regex patterns |
-| Structure | Formatting elements (headers, lists, sections, delimiters) | Regex detection + variety scoring |
-| Task Signal | Imperative verbs, question patterns, deliverable mentions | Keyword matching |
-| Constraints | Negations, limits, format specs, audience, tone directives | Pattern matching across 5 categories |
-
-### Pillar 2: Semantic-Structural Metrics
-
-| Metric | What It Measures | Method |
-|---|---|---|
-| Coherence | Sentence-to-sentence topic flow | TF-IDF cosine similarity (scikit-learn) |
-| Semantic Density | Ratio of meaningful lemmas to total tokens | spaCy POS tagging |
-| Topic Focus | Single-topic vs scattered content | TF-IDF centroid distance |
-| Lexical Sophistication | Vocabulary precision and rarity | NLTK Brown corpus frequency ranks |
-| Sentence Flow | Natural length variation | Coefficient of variation scoring |
-| Reference Resolution | Pronoun-antecedent clarity | spaCy dependency parsing |
-
-### Pillar 3: Information-Theoretic Metrics
-
-| Metric | What It Measures | Method |
-|---|---|---|
-| Shannon Entropy | Token diversity | Normalized entropy of tiktoken distribution |
-| Redundancy | Token-level repetition | Unique/total token ratio |
-| Information Density | Information per token | Entropy divided by token count |
-| Vocabulary Richness | Type-token ratio robustness | Average of basic, root, and log TTR |
-| N-gram Repetition | Repeated bigrams and trigrams | Frequency counting with penalty scaling |
-| Burstiness | Uniformity of information distribution | Per-chunk entropy variance |
-
-### Discourse Graph Analysis
-
-Each sentence is classified as one of four discourse types using keyword heuristics:
-
-- **CONTEXT** -- background information ("I have", "currently", "given")
-- **TASK** -- the core instruction ("write", "explain", "how")
-- **CONSTRAINT** -- guardrails ("must", "do not", "maximum", "in JSON")
-- **EXAMPLE** -- illustrations ("for example", "e.g.", "such as")
-
-The graph connects sentences via sequential adjacency and shared noun chunks/entities (spaCy). Four metrics are extracted: completeness (are all discourse types present?), connectivity (graph density), information flow (correct CONTEXT -> TASK -> CONSTRAINT ordering), and complexity (edge/node ratio).
-
-### Rubric Dimensions
-
-Raw metrics are combined into 8 interpretable dimensions using weighted composites:
-
-| Dimension | Contributing Metrics | What It Tells You |
-|---|---|---|
-| **Clarity** | Grammar, readability, reference resolution, sentence flow | Can the LLM easily parse this prompt? |
-| **Specificity** | Specificity, lexical sophistication, semantic density | Does the prompt contain concrete details? |
-| **Structure** | Formatting, graph completeness, information flow, coherence | Is the prompt well-organized? |
-| **Task Definition** | Task signal, graph task nodes, constraints | Is there a clear instruction? |
-| **Context Completeness** | Graph context nodes, topic focus, length | Is enough background provided? |
-| **Constraint Specification** | Constraints, graph constraint nodes, specificity | Are output requirements defined? |
-| **Information Richness** | Entropy, vocabulary richness, info density, semantic density | Is the content substantive? |
-| **Conciseness** | Redundancy, n-gram repetition, burstiness | Is the prompt free of filler and repetition? |
-
-### Scoring Scale
-
-| Score Range | Label |
-|---|---|
-| 85 -- 100 | Excellent |
-| 75 -- 84 | Very Good |
-| 60 -- 74 | Good |
-| 45 -- 59 | Average |
-| 25 -- 44 | Below Average |
-| 0 -- 24 | Poor |
-
----
-
-## Project Structure
-
-```
-prompt-quality-evaluator/
-├── main.py                          # CLI entry point
-├── evaluator/
-│   ├── __init__.py
-│   ├── rule_based.py                # Pillar 1: 7 rule-based metrics
-│   ├── semantic_structural.py       # Pillar 2: 6 TF-IDF/spaCy metrics
-│   ├── info_theoretic.py            # Pillar 3: 6 entropy-based metrics
-│   ├── graph_analysis.py            # Discourse graph (NetworkX)
-│   ├── rubric.py                    # Metric-to-dimension mapping
-│   ├── scorer.py                    # Final scoring and aggregation
-│   ├── visualizer.py                # Radar chart + terminal report
-│   └── utils.py                     # Shared NLP helpers
-├── data/
-│   └── sample_prompts.json          # 20 prompts across 5 quality tiers
-├── tests/
-│   └── test_evaluator.py            # 35 tests (pytest)
-├── requirements.txt
-└── .gitignore
-```
-
----
-
 ## Testing
 
 ```bash
-# Run all tests
 pytest tests/ -v
-
-# Run a specific test class
-pytest tests/test_evaluator.py::TestMonotonicity -v
-
-# Run with coverage (requires pytest-cov)
 pytest tests/ --cov=evaluator --cov-report=term-missing
 ```
 
-### Test Categories
-
-| Category | Tests | What It Validates |
-|---|---|---|
-| Monotonicity | 1 | Average tier scores are strictly increasing across all 5 tiers |
-| Boundaries | 3 | Empty string, single word, and good prompt produce expected score ranges |
-| Rule-Based | 9 | Each Pillar 1 metric in isolation with known inputs |
-| Semantic | 6 | Each Pillar 2 metric in isolation |
-| Info-Theoretic | 6 | Each Pillar 3 metric in isolation |
-| Graph Analysis | 3 | Graph construction, completeness scoring |
-| Determinism | 1 | Same prompt produces identical scores across 3 runs |
-| Edge Cases | 6 | All-caps, code-only, URL-only, special characters, long prompts |
+35 tests covering tier monotonicity, boundary cases, each pillar in isolation, graph construction, determinism, and edge cases (all-caps, code-only, URL-only, very long prompts).
 
 ---
 
-## Requirements
+## Limitations
 
-| Package | Purpose |
-|---|---|
-| spacy (en_core_web_sm) | NER, POS tagging, dependency parsing, sentence splitting |
-| nltk | Brown corpus frequencies, stopwords, tokenization |
-| scikit-learn | TF-IDF vectorization, cosine similarity |
-| textstat | Readability scoring (Flesch-Kincaid) |
-| language-tool-python | Grammar checking |
-| tiktoken | Token-level analysis (cl100k_base encoding) |
-| networkx | Discourse graph construction and metrics |
-| numpy / scipy | Mathematical computation |
-| matplotlib | Radar chart generation |
-| rich | Terminal formatting and colored output |
-| pytest | Test framework |
+Reported honestly, because they bound what this tool is good for.
+
+- **The benchmark is 20 prompts and entirely engineering.** The domain detector labels 11 of them coding and 9 general. There is not one creative or natural-science prompt in the corpus. Every correlation here is a statement about engineering prompts and should not be read as a claim about prompt quality in general. The 95% confidence interval on r = 0.932 at n = 20 is roughly [0.83, 0.97].
+- **Context Completeness is only moderate** (r = 0.509). We count discourse markers; the LLM judges whether the context actually fits the task. A short prompt with exactly the right context scores low here and high with the judge. This is the largest genuine hole in what the pipeline can see.
+- **Conciseness does not correlate** (r = 0.240), and the benchmark cannot settle who is right. See the note under [Results](#results).
+- **Creative and literary prompts are underserved.** "noir-style" and "unreliable narrator" constrain an output tightly, but we score such a prompt only 48.4 (Average). We expect a transformer judge to do better here, though with no creative prompts in the corpus we have not measured the gap.
+- **Code-heavy prompts** with unfenced inline code confuse the grammar and readability metrics. `Refactor this function: def f(x): return x*2` scores 32.6 despite being a perfectly clear instruction.
+- **English only.** Other languages are flagged and not scored.
+- **Rubric weights are hand-tuned**, nudged until tier monotonicity held. The `creative` and `instructional` domain weights have never been validated against a judge. A regression fitted on human-labelled prompts would very likely beat hand-tuning.
 
 ---
 
-## API Reference
+## Project structure
 
-### `evaluator.scorer.evaluate(text, dimension_weights=None)`
+```
+prompt-quality-evaluator/
+├── main.py                      # CLI entry point
+├── evaluator/
+│   ├── rule_based.py            # Pillar 1: 16 metrics
+│   ├── semantic_structural.py   # Pillar 2: 10 metrics
+│   ├── info_theoretic.py        # Pillar 3: 7 metrics
+│   ├── graph_analysis.py        # Pillar 4: discourse graph, 8 metrics
+│   ├── rubric.py                # 41 metrics -> 8 dimensions, domain weighting
+│   ├── scorer.py                # Aggregation and the three modifiers
+│   ├── improvements.py          # Actionable suggestions
+│   ├── reference_templates.py   # Canonical prompts per domain
+│   ├── visualizer.py            # Radar chart and terminal report
+│   └── utils.py                 # Shared NLP helpers
+├── llm_evaluator/               # The Gemini judge baseline (NOT used by the scorer)
+│   ├── judge.py                 #   API calls, temperature=0.0, response parsing
+│   ├── template.py              #   the exact judge prompt, 8 dimensions
+│   └── visualizer.py
+├── data/sample_prompts.json     # 20-prompt benchmark corpus, 5 tiers
+├── tests/test_evaluator.py      # 35 tests
+├── run_benchmark.py             # Benchmark vs the Gemini judge (--offline supported)
+├── run_ablation.py              # Pillar ablation study
+├── benchmark_real_results.json  # Measured scores for both systems
+├── requirements.txt             # Scorer deps. Contains no LLM SDK, by design.
+├── requirements-benchmark.txt   # Judge deps, only needed for a live run
+├── requirements.lock.txt        # Exact versions behind every number in the paper
+└── .env.example                 # Copy to .env for a live run. .env is gitignored.
+```
 
-Main entry point. Returns a dictionary with:
+`evaluator/` and `llm_evaluator/` never import each other. The scorer does not know the judge exists.
 
-```python
-{
-    "final_score": 72.5,                # float, 0-100
-    "label": "Good",                    # str
-    "rubric_dimensions": [              # list of 8 dicts
-        {
-            "name": "Clarity",
-            "score": 0.73,              # float, 0-1
-            "label": "Strong",
-            "findings": ["No grammar issues detected.", ...]
-        },
-        ...
-    ],
-    "raw_metrics": {                    # all 19 individual metrics
-        "rule_based.grammar": {"score": 0.95, "findings": [...]},
-        ...
-    },
-    "pillar_scores": {                  # per-pillar averages
-        "rule_based": 0.65,
-        "semantic_structural": 0.58,
-        "info_theoretic": 0.72,
-        "graph_analysis": 0.55
-    },
-    "suggestions": [                    # top 3 improvement tips
-        "Improve **Constraint Specification** (score: 0.14): ..."
-    ]
+---
+
+## Citation
+
+If you use this work, please cite the paper:
+
+```bibtex
+@inproceedings{poonia2026promptquality,
+  title     = {A Multi-Pillar Prompt Quality Evaluation System Using Rule-Based,
+               Semantic-Structural, Information-Theoretic, and Discourse Graph
+               Metrics Without {LLM} Judgment},
+  author    = {Poonia, Ojasvi and G, Brunda},
+  booktitle = {},
+  year      = {2026},
+  note      = {Code: \url{https://github.com/Ojasvi-Poonia/Prompt-Quality-Evaluator}}
 }
 ```
-
-### Individual Pillar APIs
-
-Each pillar module exposes a `compute_all(text)` function and individual metric functions:
-
-```python
-from evaluator.rule_based import grammar_quality, compute_all
-
-score, findings = grammar_quality("Your text here")
-all_metrics = compute_all("Your text here")
-```
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/new-metric`)
-3. Ensure all 35 tests pass (`pytest tests/ -v`)
-4. Verify the monotonicity test still passes (tier ordering must hold)
-5. Submit a pull request
-
-### Adding a New Metric
-
-1. Add the scoring function to the appropriate pillar module (`rule_based.py`, `semantic_structural.py`, or `info_theoretic.py`)
-2. Include it in the module's `compute_all()` function
-3. Wire it into the relevant rubric dimension(s) in `rubric.py`
-4. Add unit tests in `test_evaluator.py`
-5. Verify monotonicity still holds
-
-### Design Constraints
-
-- No transformer models, no LLM API calls, no HuggingFace models
-- All computation must be local and deterministic
-- Every metric function must return `(score: float, findings: list[str])`
-- Scores must be in the 0-1 range
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
-
----
+MIT. See [LICENSE](LICENSE).
 
 ## Acknowledgments
 
-Built with [spaCy](https://spacy.io/), [NLTK](https://www.nltk.org/), [scikit-learn](https://scikit-learn.org/), [NetworkX](https://networkx.org/), [textstat](https://github.com/textstat/textstat), [language-tool-python](https://github.com/jxmorris12/language_tool_python), [tiktoken](https://github.com/openai/tiktoken), [matplotlib](https://matplotlib.org/), and [Rich](https://github.com/Textualize/rich).
+Built with [spaCy](https://spacy.io/), [NLTK](https://www.nltk.org/), [scikit-learn](https://scikit-learn.org/), [NetworkX](https://networkx.org/), [textstat](https://github.com/textstat/textstat), [wordfreq](https://github.com/rspeer/wordfreq), [lexicalrichness](https://github.com/LSYS/LexicalRichness), [language-tool-python](https://github.com/jxmorris12/language_tool_python), [tiktoken](https://github.com/openai/tiktoken), [TextBlob](https://textblob.readthedocs.io/), [VADER](https://github.com/cjhutto/vaderSentiment), [matplotlib](https://matplotlib.org/), and [Rich](https://github.com/Textualize/rich).

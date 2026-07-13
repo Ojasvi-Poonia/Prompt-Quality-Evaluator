@@ -37,3 +37,8 @@ nltk_data/
 # Test artifacts
 data/good_test.txt
 data/excellent_test.txt
+
+# Secrets (never commit)
+.env
+.env.*
+!.env.example

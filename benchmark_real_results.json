@@ -1,0 +1,622 @@
+[
+  {
+    "id": 1,
+    "tier": "terrible",
+    "prompt": "help",
+    "preview": "help",
+    "classical_score": 12.0,
+    "classical_label": "Poor",
+    "classical_domain": "general",
+    "llm_score": 5.0,
+    "llm_label": "Poor",
+    "classical_dims": {
+      "Clarity": 0.584,
+      "Specificity": 0.326,
+      "Structure": 0.331,
+      "Task Definition": 0.335,
+      "Context Completeness": 0.295,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.163,
+      "Conciseness": 0.35
+    },
+    "llm_dims": {
+      "Clarity": 0.1,
+      "Specificity": 0.0,
+      "Structure": 0.0,
+      "Task Definition": 0.0,
+      "Context Completeness": 0.0,
+      "Constraint Specification": 0.0,
+      "Information Richness": 0.0,
+      "Conciseness": 1.0
+    }
+  },
+  {
+    "id": 2,
+    "tier": "terrible",
+    "prompt": "do thing",
+    "preview": "do thing",
+    "classical_score": 12.0,
+    "classical_label": "Poor",
+    "classical_domain": "general",
+    "llm_score": 5.0,
+    "llm_label": "Poor",
+    "classical_dims": {
+      "Clarity": 0.546,
+      "Specificity": 0.367,
+      "Structure": 0.373,
+      "Task Definition": 0.335,
+      "Context Completeness": 0.296,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.387,
+      "Conciseness": 0.35
+    },
+    "llm_dims": {
+      "Clarity": 0.1,
+      "Specificity": 0.0,
+      "Structure": 0.0,
+      "Task Definition": 0.2,
+      "Context Completeness": 0.0,
+      "Constraint Specification": 0.0,
+      "Information Richness": 0.0,
+      "Conciseness": 0.5
+    }
+  },
+  {
+    "id": 3,
+    "tier": "terrible",
+    "prompt": "write code",
+    "preview": "write code",
+    "classical_score": 16.2,
+    "classical_label": "Poor",
+    "classical_domain": "general",
+    "llm_score": 10.0,
+    "llm_label": "Poor",
+    "classical_dims": {
+      "Clarity": 0.546,
+      "Specificity": 0.334,
+      "Structure": 0.373,
+      "Task Definition": 0.68,
+      "Context Completeness": 0.296,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.387,
+      "Conciseness": 0.35
+    },
+    "llm_dims": {
+      "Clarity": 0.8,
+      "Specificity": 0.0,
+      "Structure": 0.0,
+      "Task Definition": 0.5,
+      "Context Completeness": 0.0,
+      "Constraint Specification": 0.0,
+      "Information Richness": 0.0,
+      "Conciseness": 1.0
+    }
+  },
+  {
+    "id": 4,
+    "tier": "terrible",
+    "prompt": "fix it",
+    "preview": "fix it",
+    "classical_score": 12.0,
+    "classical_label": "Poor",
+    "classical_domain": "general",
+    "llm_score": 5.0,
+    "llm_label": "Poor",
+    "classical_dims": {
+      "Clarity": 0.496,
+      "Specificity": 0.454,
+      "Structure": 0.387,
+      "Task Definition": 0.335,
+      "Context Completeness": 0.296,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.387,
+      "Conciseness": 0.35
+    },
+    "llm_dims": {
+      "Clarity": 0.1,
+      "Specificity": 0.0,
+      "Structure": 0.0,
+      "Task Definition": 0.2,
+      "Context Completeness": 0.0,
+      "Constraint Specification": 0.0,
+      "Information Richness": 0.0,
+      "Conciseness": 1.0
+    }
+  },
+  {
+    "id": 5,
+    "tier": "poor",
+    "prompt": "Write me a python script that does stuff with data",
+    "preview": "Write me a python script that does stuff with data",
+    "classical_score": 41.3,
+    "classical_label": "Below Average",
+    "classical_domain": "coding",
+    "llm_score": 10.0,
+    "llm_label": "Poor",
+    "classical_dims": {
+      "Clarity": 0.793,
+      "Specificity": 0.465,
+      "Structure": 0.452,
+      "Task Definition": 0.68,
+      "Context Completeness": 0.407,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.387,
+      "Conciseness": 0.35
+    },
+    "llm_dims": {
+      "Clarity": 0.2,
+      "Specificity": 0.0,
+      "Structure": 0.0,
+      "Task Definition": 0.3,
+      "Context Completeness": 0.0,
+      "Constraint Specification": 0.0,
+      "Information Richness": 0.1,
+      "Conciseness": 0.8
+    }
+  },
+  {
+    "id": 6,
+    "tier": "poor",
+    "prompt": "Can you make a website for me? I want it to look good and work well.",
+    "preview": "Can you make a website for me? I want it to look good and work well.",
+    "classical_score": 43.9,
+    "classical_label": "Below Average",
+    "classical_domain": "general",
+    "llm_score": 15.0,
+    "llm_label": "Poor",
+    "classical_dims": {
+      "Clarity": 0.728,
+      "Specificity": 0.41,
+      "Structure": 0.494,
+      "Task Definition": 0.395,
+      "Context Completeness": 0.764,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.386,
+      "Conciseness": 0.475
+    },
+    "llm_dims": {
+      "Clarity": 0.8,
+      "Specificity": 0.0,
+      "Structure": 0.0,
+      "Task Definition": 0.7,
+      "Context Completeness": 0.0,
+      "Constraint Specification": 0.1,
+      "Information Richness": 0.1,
+      "Conciseness": 0.6
+    }
+  },
+  {
+    "id": 7,
+    "tier": "poor",
+    "prompt": "Explain machine learning in simple terms and give some examples of how it is used.",
+    "preview": "Explain machine learning in simple terms and give some examples of how it is use...",
+    "classical_score": 41.9,
+    "classical_label": "Below Average",
+    "classical_domain": "general",
+    "llm_score": 45.0,
+    "llm_label": "Average",
+    "classical_dims": {
+      "Clarity": 0.845,
+      "Specificity": 0.434,
+      "Structure": 0.436,
+      "Task Definition": 0.62,
+      "Context Completeness": 0.409,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.409,
+      "Conciseness": 0.35
+    },
+    "llm_dims": {
+      "Clarity": 0.9,
+      "Specificity": 0.3,
+      "Structure": 0.1,
+      "Task Definition": 1.0,
+      "Context Completeness": 0.0,
+      "Constraint Specification": 0.1,
+      "Information Richness": 0.3,
+      "Conciseness": 0.9
+    }
+  },
+  {
+    "id": 8,
+    "tier": "poor",
+    "prompt": "I need a function that sorts things. Make it fast.",
+    "preview": "I need a function that sorts things. Make it fast.",
+    "classical_score": 44.3,
+    "classical_label": "Below Average",
+    "classical_domain": "general",
+    "llm_score": 25.0,
+    "llm_label": "Poor",
+    "classical_dims": {
+      "Clarity": 0.791,
+      "Specificity": 0.427,
+      "Structure": 0.498,
+      "Task Definition": 0.41,
+      "Context Completeness": 0.762,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.387,
+      "Conciseness": 0.475
+    },
+    "llm_dims": {
+      "Clarity": 0.9,
+      "Specificity": 0.1,
+      "Structure": 0.1,
+      "Task Definition": 0.7,
+      "Context Completeness": 0.0,
+      "Constraint Specification": 0.2,
+      "Information Richness": 0.1,
+      "Conciseness": 0.9
+    }
+  },
+  {
+    "id": 9,
+    "tier": "average",
+    "prompt": "Write a Python function that takes a list of numbers and returns the top 3 largest values. Handle edge cases like empty lists and lists with fewer than 3 elements.",
+    "preview": "Write a Python function that takes a list of numbers and returns the top 3 large...",
+    "classical_score": 65.6,
+    "classical_label": "Good",
+    "classical_domain": "coding",
+    "llm_score": 75.0,
+    "llm_label": "Good",
+    "classical_dims": {
+      "Clarity": 0.856,
+      "Specificity": 0.577,
+      "Structure": 0.532,
+      "Task Definition": 0.8,
+      "Context Completeness": 0.475,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.96,
+      "Conciseness": 0.918
+    },
+    "llm_dims": {
+      "Clarity": 0.9,
+      "Specificity": 0.7,
+      "Structure": 0.2,
+      "Task Definition": 1.0,
+      "Context Completeness": 0.2,
+      "Constraint Specification": 0.8,
+      "Information Richness": 0.6,
+      "Conciseness": 0.9
+    }
+  },
+  {
+    "id": 10,
+    "tier": "average",
+    "prompt": "Create a REST API endpoint in Node.js that accepts a POST request with a JSON body containing a username and password, validates the input, and returns a JWT token. Use Express.",
+    "preview": "Create a REST API endpoint in Node.js that accepts a POST request with a JSON bo...",
+    "classical_score": 68.2,
+    "classical_label": "Good",
+    "classical_domain": "coding",
+    "llm_score": 58.0,
+    "llm_label": "Average",
+    "classical_dims": {
+      "Clarity": 0.888,
+      "Specificity": 0.771,
+      "Structure": 0.526,
+      "Task Definition": 0.76,
+      "Context Completeness": 0.471,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.937,
+      "Conciseness": 0.942
+    },
+    "llm_dims": {
+      "Clarity": 0.9,
+      "Specificity": 0.7,
+      "Structure": 0.1,
+      "Task Definition": 1.0,
+      "Context Completeness": 0.1,
+      "Constraint Specification": 0.4,
+      "Information Richness": 0.6,
+      "Conciseness": 1.0
+    }
+  },
+  {
+    "id": 11,
+    "tier": "average",
+    "prompt": "Write a SQL query that finds all customers who placed more than 5 orders in the last 30 days. Include their name, email, and total order amount. Use the customers and orders tables.",
+    "preview": "Write a SQL query that finds all customers who placed more than 5 orders in the ...",
+    "classical_score": 66.6,
+    "classical_label": "Good",
+    "classical_domain": "general",
+    "llm_score": 70.0,
+    "llm_label": "Good",
+    "classical_dims": {
+      "Clarity": 0.903,
+      "Specificity": 0.565,
+      "Structure": 0.512,
+      "Task Definition": 0.74,
+      "Context Completeness": 0.46,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.931,
+      "Conciseness": 0.942
+    },
+    "llm_dims": {
+      "Clarity": 0.9,
+      "Specificity": 0.7,
+      "Structure": 0.2,
+      "Task Definition": 1.0,
+      "Context Completeness": 0.2,
+      "Constraint Specification": 0.6,
+      "Information Richness": 0.6,
+      "Conciseness": 0.9
+    }
+  },
+  {
+    "id": 12,
+    "tier": "average",
+    "prompt": "Explain the difference between TCP and UDP protocols. Cover reliability, ordering, speed, and typical use cases for each. Write it for someone with basic networking knowledge.",
+    "preview": "Explain the difference between TCP and UDP protocols. Cover reliability, orderin...",
+    "classical_score": 63.6,
+    "classical_label": "Good",
+    "classical_domain": "general",
+    "llm_score": 75.0,
+    "llm_label": "Good",
+    "classical_dims": {
+      "Clarity": 0.91,
+      "Specificity": 0.571,
+      "Structure": 0.51,
+      "Task Definition": 0.715,
+      "Context Completeness": 0.447,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.954,
+      "Conciseness": 0.864
+    },
+    "llm_dims": {
+      "Clarity": 0.9,
+      "Specificity": 0.8,
+      "Structure": 0.3,
+      "Task Definition": 1.0,
+      "Context Completeness": 0.3,
+      "Constraint Specification": 0.8,
+      "Information Richness": 0.7,
+      "Conciseness": 0.9
+    }
+  },
+  {
+    "id": 13,
+    "tier": "good",
+    "prompt": "Write a Python function called `merge_sorted_lists` that merges two sorted lists into a single sorted list.\n\nRequirements:\n- Time complexity must be O(n + m) where n and m are the lengths of the input lists\n- Do not use Python's built-in sort()\n- Handle edge cases: empty lists, lists with duplicates, lists of different lengths\n- Add type hints and a docstring\n- Return a new list (do not modify inputs)\n\nExample:\n  merge_sorted_lists([1, 3, 5], [2, 4, 6]) -> [1, 2, 3, 4, 5, 6]",
+    "preview": "Write a Python function called `merge_sorted_lists` that merges two sorted lists...",
+    "classical_score": 65.8,
+    "classical_label": "Good",
+    "classical_domain": "coding",
+    "llm_score": 94.0,
+    "llm_label": "Excellent",
+    "classical_dims": {
+      "Clarity": 0.723,
+      "Specificity": 0.782,
+      "Structure": 0.599,
+      "Task Definition": 0.87,
+      "Context Completeness": 0.446,
+      "Constraint Specification": 0.42,
+      "Information Richness": 0.757,
+      "Conciseness": 0.673
+    },
+    "llm_dims": {
+      "Clarity": 1.0,
+      "Specificity": 0.9,
+      "Structure": 0.9,
+      "Task Definition": 1.0,
+      "Context Completeness": 1.0,
+      "Constraint Specification": 1.0,
+      "Information Richness": 0.8,
+      "Conciseness": 1.0
+    }
+  },
+  {
+    "id": 14,
+    "tier": "good",
+    "prompt": "Design a database schema for an e-commerce platform.\n\nContext: We are building a multi-vendor marketplace where sellers list products and buyers place orders.\n\nRequirements:\n- Support multiple sellers, each with their own product catalog\n- Products have categories, prices, inventory counts, and images\n- Orders track status (pending, shipped, delivered, cancelled)\n- Include proper foreign keys and indexes\n\nConstraints:\n- Use PostgreSQL\n- Normalise to 3NF\n- Include created_at and updated_at timestamps on all tables\n\nOutput as SQL CREATE TABLE statements with comments.",
+    "preview": "Design a database schema for an e-commerce platform.\n\nContext: We are building a...",
+    "classical_score": 67.4,
+    "classical_label": "Good",
+    "classical_domain": "coding",
+    "llm_score": 87.0,
+    "llm_label": "Very Good",
+    "classical_dims": {
+      "Clarity": 0.698,
+      "Specificity": 0.806,
+      "Structure": 0.555,
+      "Task Definition": 0.88,
+      "Context Completeness": 0.454,
+      "Constraint Specification": 0.275,
+      "Information Richness": 0.858,
+      "Conciseness": 0.917
+    },
+    "llm_dims": {
+      "Clarity": 0.9,
+      "Specificity": 0.7,
+      "Structure": 0.8,
+      "Task Definition": 1.0,
+      "Context Completeness": 1.0,
+      "Constraint Specification": 1.0,
+      "Information Richness": 0.7,
+      "Conciseness": 0.9
+    }
+  },
+  {
+    "id": 15,
+    "tier": "good",
+    "prompt": "Write a technical blog post comparing React Server Components vs traditional client-side rendering.\n\nAudience: Intermediate frontend developers familiar with React but new to RSC.\n\nCover:\n- What problem RSC solves\n- How data fetching differs\n- Bundle size implications\n- When to use each approach\n\nFormat:\n- 800-1200 words\n- Include code snippets for key concepts\n- Use a neutral, informative tone\n- End with a practical decision framework",
+    "preview": "Write a technical blog post comparing React Server Components vs traditional cli...",
+    "classical_score": 78.5,
+    "classical_label": "Very Good",
+    "classical_domain": "coding",
+    "llm_score": 87.0,
+    "llm_label": "Very Good",
+    "classical_dims": {
+      "Clarity": 0.802,
+      "Specificity": 0.792,
+      "Structure": 0.716,
+      "Task Definition": 0.75,
+      "Context Completeness": 0.47,
+      "Constraint Specification": 0.62,
+      "Information Richness": 0.877,
+      "Conciseness": 0.91
+    },
+    "llm_dims": {
+      "Clarity": 0.9,
+      "Specificity": 0.8,
+      "Structure": 0.8,
+      "Task Definition": 1.0,
+      "Context Completeness": 0.9,
+      "Constraint Specification": 0.9,
+      "Information Richness": 0.8,
+      "Conciseness": 0.9
+    }
+  },
+  {
+    "id": 16,
+    "tier": "good",
+    "prompt": "Implement a rate limiter middleware for an Express.js API.\n\nContext: Our API serves 10,000 requests per minute. We need to prevent abuse without blocking legitimate users.\n\nRequirements:\n- Sliding window algorithm\n- 100 requests per minute per IP address\n- Return 429 status with Retry-After header when limit exceeded\n- Store counters in Redis for multi-instance support\n\nDo not use third-party rate limiting libraries. Include unit tests.",
+    "preview": "Implement a rate limiter middleware for an Express.js API.\n\nContext: Our API ser...",
+    "classical_score": 83.0,
+    "classical_label": "Very Good",
+    "classical_domain": "coding",
+    "llm_score": 93.0,
+    "llm_label": "Excellent",
+    "classical_dims": {
+      "Clarity": 0.862,
+      "Specificity": 0.733,
+      "Structure": 0.66,
+      "Task Definition": 0.79,
+      "Context Completeness": 0.734,
+      "Constraint Specification": 0.707,
+      "Information Richness": 0.892,
+      "Conciseness": 0.919
+    },
+    "llm_dims": {
+      "Clarity": 1.0,
+      "Specificity": 0.9,
+      "Structure": 0.9,
+      "Task Definition": 1.0,
+      "Context Completeness": 0.9,
+      "Constraint Specification": 1.0,
+      "Information Richness": 0.9,
+      "Conciseness": 0.9
+    }
+  },
+  {
+    "id": 17,
+    "tier": "excellent",
+    "prompt": "Context:\nI am building a real-time collaborative document editor (similar to Google Docs) using React 18 on the frontend and a Node.js WebSocket server on the backend. The system needs to handle concurrent edits from multiple users on the same document without data loss or conflicts.\n\nTask:\nImplement the Operational Transformation (OT) algorithm for the backend conflict resolution module.\n\nSpecific requirements:\n1. Support three operation types: insert(position, character), delete(position), and retain(count)\n2. Implement the `transform(op1, op2)` function that takes two concurrent operations and returns transformed versions that can be applied in either order to reach the same document state\n3. Implement the `compose(op1, op2)` function that combines two sequential operations into one\n4. Handle edge cases: operations at the same position, overlapping deletes, operations on empty documents\n\nConstraints:\n- Language: TypeScript with strict mode\n- No external OT libraries (implement from scratch)\n- All functions must be pure (no side effects)\n- Include JSDoc comments explaining the mathematical properties (commutativity, convergence)\n- Time complexity for transform must be O(n) where n is the total length of operations\n\nOutput format:\n- Single TypeScript file with exported types and functions\n- Include at least 10 unit tests covering all operation type combinations\n- Add a README section explaining the algorithm with a visual diagram in ASCII art\n\nExample:\n  transform(insert(3, 'a'), insert(1, 'b')) should return:\n    [insert(4, 'a'), insert(1, 'b')]  // first op shifted right because second inserted before it",
+    "preview": "Context:\nI am building a real-time collaborative document editor (similar to Goo...",
+    "classical_score": 72.4,
+    "classical_label": "Good",
+    "classical_domain": "coding",
+    "llm_score": 95.0,
+    "llm_label": "Excellent",
+    "classical_dims": {
+      "Clarity": 0.711,
+      "Specificity": 0.727,
+      "Structure": 0.723,
+      "Task Definition": 0.835,
+      "Context Completeness": 0.738,
+      "Constraint Specification": 0.507,
+      "Information Richness": 0.76,
+      "Conciseness": 0.603
+    },
+    "llm_dims": {
+      "Clarity": 1.0,
+      "Specificity": 0.9,
+      "Structure": 1.0,
+      "Task Definition": 1.0,
+      "Context Completeness": 1.0,
+      "Constraint Specification": 1.0,
+      "Information Richness": 0.9,
+      "Conciseness": 0.9
+    }
+  },
+  {
+    "id": 18,
+    "tier": "excellent",
+    "prompt": "Context:\nOur production Kubernetes cluster (v1.28, 3 control plane nodes, 15 worker nodes across 3 availability zones) is experiencing intermittent pod evictions during peak hours (2-4 PM UTC). The affected pods are in the `payment-service` deployment (8 replicas, resource requests: 512Mi memory, 250m CPU; limits: 1Gi memory, 500m CPU). Metrics show node memory utilisation hitting 92-95% during these periods.\n\nTask:\nProvide a comprehensive troubleshooting and remediation plan.\n\nRequirements:\n1. Diagnostic commands to run (kubectl, metrics queries) with expected output interpretation\n2. Root cause analysis framework: distinguish between OOMKill, node pressure eviction, and preemption\n3. Short-term fix: adjust resource configurations to stop the bleeding\n4. Long-term solution: implement proper autoscaling (HPA + VPA + Cluster Autoscaler configuration)\n5. Monitoring: Prometheus alerting rules to detect this before it impacts users\n\nConstraints:\n- Do not suggest simply adding more nodes as the only solution\n- All YAML configurations must include resource quotas and limit ranges\n- Solutions must maintain zero-downtime during implementation\n- Account for PodDisruptionBudgets\n\nOutput format:\n- Numbered steps with exact commands\n- YAML configurations for each Kubernetes resource\n- Prometheus alerting rules in PromQL\n- Decision tree diagram (text-based) for future troubleshooting",
+    "preview": "Context:\nOur production Kubernetes cluster (v1.28, 3 control plane nodes, 15 wor...",
+    "classical_score": 73.9,
+    "classical_label": "Good",
+    "classical_domain": "coding",
+    "llm_score": 93.0,
+    "llm_label": "Excellent",
+    "classical_dims": {
+      "Clarity": 0.698,
+      "Specificity": 0.562,
+      "Structure": 0.705,
+      "Task Definition": 0.87,
+      "Context Completeness": 0.747,
+      "Constraint Specification": 0.69,
+      "Information Richness": 0.775,
+      "Conciseness": 0.647
+    },
+    "llm_dims": {
+      "Clarity": 1.0,
+      "Specificity": 0.9,
+      "Structure": 0.9,
+      "Task Definition": 1.0,
+      "Context Completeness": 0.9,
+      "Constraint Specification": 1.0,
+      "Information Richness": 0.9,
+      "Conciseness": 0.9
+    }
+  },
+  {
+    "id": 19,
+    "tier": "excellent",
+    "prompt": "Context:\nI am a data scientist at a healthcare company. We have a dataset of 50,000 patient records with 200 features including demographics, lab results, medication history, and diagnosis codes. The target variable is 30-day hospital readmission (binary: yes/no). The dataset is imbalanced with only 12% positive cases. We need an interpretable model because clinicians must understand and trust the predictions.\n\nTask:\nDesign and implement a complete ML pipeline for predicting 30-day readmissions.\n\nRequirements:\n- Feature engineering: handle missing values (MCAR/MAR/MNAR analysis), create interaction features for key clinical indicators, encode diagnosis codes using ICD-10 hierarchy\n- Model selection: compare at least 3 approaches (logistic regression with L1/L2, gradient boosting, and one other). Justify choices.\n- Handle class imbalance using SMOTE and class weights. Compare both approaches.\n- Evaluation: use AUROC, AUPRC, calibration curves, and net benefit analysis (decision curve). Do not rely on accuracy alone.\n- Interpretability: SHAP values for global and local explanations, partial dependence plots for top 5 features\n\nConstraints:\n- Python 3.11+, scikit-learn, XGBoost, SHAP\n- All random seeds fixed for reproducibility\n- Cross-validation: stratified 5-fold\n- No data leakage: all preprocessing fitted on training folds only\n- Maximum 500 lines of code\n\nOutput:\n- Single Python script with functions for each pipeline stage\n- Print a summary table comparing all models on all metrics\n- Save SHAP summary plot and calibration curves to ./output/\n- Include docstrings explaining clinical relevance of design choices",
+    "preview": "Context:\nI am a data scientist at a healthcare company. We have a dataset of 50,...",
+    "classical_score": 79.2,
+    "classical_label": "Very Good",
+    "classical_domain": "coding",
+    "llm_score": 95.0,
+    "llm_label": "Excellent",
+    "classical_dims": {
+      "Clarity": 0.699,
+      "Specificity": 0.579,
+      "Structure": 0.708,
+      "Task Definition": 0.94,
+      "Context Completeness": 0.73,
+      "Constraint Specification": 0.725,
+      "Information Richness": 0.76,
+      "Conciseness": 0.888
+    },
+    "llm_dims": {
+      "Clarity": 1.0,
+      "Specificity": 0.9,
+      "Structure": 1.0,
+      "Task Definition": 1.0,
+      "Context Completeness": 1.0,
+      "Constraint Specification": 1.0,
+      "Information Richness": 0.9,
+      "Conciseness": 0.9
+    }
+  },
+  {
+    "id": 20,
+    "tier": "excellent",
+    "prompt": "Context:\nWe are migrating a monolithic Django application (Python 3.10, Django 4.2, PostgreSQL 14) to a microservices architecture. The current monolith handles user authentication, product catalog, order management, payment processing, and notifications. Monthly active users: 500K. Peak concurrent requests: 2,000/second.\n\nTask:\nCreate a detailed migration plan with implementation specifications for the first phase: extracting the authentication service.\n\nRequirements:\n1. Service boundary definition: identify all authentication-related models, views, middleware, and their dependencies on other modules\n2. API contract: design the REST API for the new auth service (OpenAPI 3.0 spec) including endpoints for login, registration, token refresh, password reset, and OAuth2 provider integration\n3. Data migration strategy: how to move user tables without downtime, handle the transition period where both systems need to work\n4. Strangler fig pattern implementation: routing rules to gradually shift traffic from monolith to microservice\n5. Shared authentication: JWT-based token validation that both the monolith and new services can verify independently\n\nConstraints:\n- Zero downtime during migration\n- Maintain backward compatibility with existing mobile apps (API v1)\n- New service must be containerised (Dockerfile + docker-compose.yml)\n- Include database migration scripts (both forward and rollback)\n- Latency budget: authentication requests must complete within 200ms p99\n- Must pass existing integration test suite throughout migration\n\nOutput format:\n- Architecture diagram (text-based)\n- OpenAPI 3.0 YAML specification\n- Step-by-step migration runbook with rollback procedures\n- Docker and deployment configurations\n- Risk assessment matrix with mitigation strategies",
+    "preview": "Context:\nWe are migrating a monolithic Django application (Python 3.10, Django 4...",
+    "classical_score": 74.3,
+    "classical_label": "Good",
+    "classical_domain": "coding",
+    "llm_score": 95.0,
+    "llm_label": "Excellent",
+    "classical_dims": {
+      "Clarity": 0.713,
+      "Specificity": 0.601,
+      "Structure": 0.688,
+      "Task Definition": 0.82,
+      "Context Completeness": 0.731,
+      "Constraint Specification": 0.76,
+      "Information Richness": 0.755,
+      "Conciseness": 0.634
+    },
+    "llm_dims": {
+      "Clarity": 1.0,
+      "Specificity": 0.9,
+      "Structure": 0.9,
+      "Task Definition": 1.0,
+      "Context Completeness": 1.0,
+      "Constraint Specification": 1.0,
+      "Information Richness": 0.9,
+      "Conciseness": 0.9
+    }
+  }
+]
